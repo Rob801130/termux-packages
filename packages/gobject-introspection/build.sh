@@ -2,14 +2,13 @@ TERMUX_PKG_HOMEPAGE=https://gi.readthedocs.io/
 TERMUX_PKG_DESCRIPTION="Uniform machine readable API"
 TERMUX_PKG_LICENSE="LGPL-2.0, GPL-2.0"
 TERMUX_PKG_MAINTAINER="@termux"
-TERMUX_PKG_VERSION="1.78.1"
+TERMUX_PKG_VERSION="1.80.1"
 TERMUX_PKG_SRCURL=https://download.gnome.org/sources/gobject-introspection/${TERMUX_PKG_VERSION%.*}/gobject-introspection-${TERMUX_PKG_VERSION}.tar.xz
-TERMUX_PKG_SHA256=bd7babd99af7258e76819e45ba4a6bc399608fe762d83fde3cac033c50841bb4
-TERMUX_PKG_AUTO_UPDATE=true
+TERMUX_PKG_SHA256=a1df7c424e15bda1ab639c00e9051b9adf5cea1a9e512f8a603b53cd199bc6d8
 TERMUX_PKG_DEPENDS="glib, libffi"
 TERMUX_PKG_SUGGESTS="g-ir-scanner"
 TERMUX_PKG_DISABLE_GIR=false
-TERMUX_PKG_PYTHON_COMMON_DEPS="wheel"
+TERMUX_PKG_PYTHON_COMMON_DEPS="packaging, wheel"
 TERMUX_PKG_EXTRA_CONFIGURE_ARGS="
 -Dcairo_libname=libcairo-gobject.so
 -Dpython=python
@@ -17,7 +16,7 @@ TERMUX_PKG_EXTRA_CONFIGURE_ARGS="
 "
 
 termux_step_pre_configure() {
-	termux_setup_gir
+	TERMUX_PKG_VERSION=. termux_setup_gir
 	TERMUX_PKG_EXTRA_CONFIGURE_ARGS+="
 		-Dgi_cross_binary_wrapper=$GI_CROSS_LAUNCHER
 		"
@@ -37,16 +36,4 @@ termux_step_pre_configure() {
 		-I$TERMUX_PREFIX/include/python${TERMUX_PYTHON_VERSION}
 		-I$TERMUX_PREFIX/include/python${TERMUX_PYTHON_VERSION}/cpython
 		"
-}
-
-termux_pkg_auto_update() {
-	local LATEST_VERSION="$(termux_repology_api_get_latest_version "${TERMUX_PKG_NAME}")"
-	if [[ "$LATEST_VERSION" == "null" ]]; then
-		echo "INFO: Already up to date."
-		return 0
-	fi
-	if termux_pkg_is_update_needed "${TERMUX_PKG_VERSION#*:}" "${LATEST_VERSION}"; then
-		mv "$TERMUX_PKG_BUILDER_DIR/gir/${TERMUX_PKG_VERSION##*:}" "$TERMUX_PKG_BUILDER_DIR/gir/${LATEST_VERSION##*:}"
-	fi
-	termux_repology_auto_update
 }

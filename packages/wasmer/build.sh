@@ -3,9 +3,9 @@ TERMUX_PKG_DESCRIPTION="A fast and secure WebAssembly runtime"
 TERMUX_PKG_LICENSE="MIT"
 TERMUX_PKG_LICENSE_FILE="ATTRIBUTIONS, LICENSE"
 TERMUX_PKG_MAINTAINER="@termux"
-TERMUX_PKG_VERSION="4.2.2"
+TERMUX_PKG_VERSION="4.3.2"
 TERMUX_PKG_SRCURL=https://github.com/wasmerio/wasmer/archive/v${TERMUX_PKG_VERSION}.tar.gz
-TERMUX_PKG_SHA256=8ca4cf3afb1baa9a56d7d63ef01b5d3e4e4a9b2c67360285f1c53e7eb3ac7be1
+TERMUX_PKG_SHA256=7842ee0d9253c12785b5f59e6fc41b42956e1c1469478d1e12960906e9e1ccca
 TERMUX_PKG_BUILD_IN_SRC=true
 TERMUX_PKG_NO_STATICSPLIT=true
 TERMUX_PKG_AUTO_UPDATE=true
@@ -46,7 +46,7 @@ termux_step_make() {
 	echo "make build-wasmer"
 	# https://github.com/wasmerio/wasmer/blob/master/lib/cli/Cargo.toml
 	cargo build \
-		--jobs "${TERMUX_MAKE_PROCESSES}" \
+		--jobs "${TERMUX_PKG_MAKE_PROCESSES}" \
 		--target "${CARGO_TARGET_NAME}" \
 		--release \
 		--manifest-path lib/cli/Cargo.toml \
@@ -56,7 +56,7 @@ termux_step_make() {
 
 	echo "make build-capi"
 	cargo build \
-		--jobs "${TERMUX_MAKE_PROCESSES}" \
+		--jobs "${TERMUX_PKG_MAKE_PROCESSES}" \
 		--target "${CARGO_TARGET_NAME}" \
 		--release \
 		--manifest-path lib/c-api/Cargo.toml \
@@ -66,7 +66,7 @@ termux_step_make() {
 	echo "make build-wasmer-headless-minimal"
 	RUSTFLAGS="${RUSTFLAGS} -C panic=abort" \
 	cargo build \
-		--jobs "${TERMUX_MAKE_PROCESSES}" \
+		--jobs "${TERMUX_PKG_MAKE_PROCESSES}" \
 		--target "${CARGO_TARGET_NAME}" \
 		--release \
 		--manifest-path=lib/cli/Cargo.toml \
@@ -77,7 +77,7 @@ termux_step_make() {
 	echo "make build-capi-headless"
 	RUSTFLAGS="${RUSTFLAGS} -C panic=abort -C link-dead-code -C lto -O -C embed-bitcode=yes" \
 	cargo build \
-		--jobs "${TERMUX_MAKE_PROCESSES}" \
+		--jobs "${TERMUX_PKG_MAKE_PROCESSES}" \
 		--target "${CARGO_TARGET_NAME}" \
 		--release \
 		--manifest-path lib/c-api/Cargo.toml \
@@ -122,7 +122,7 @@ termux_step_make_install() {
 	Libs: -L${TERMUX_PREFIX}/lib -lwasmer
 	EOF
 
-	cp ATTRIBUTIONS.md ATTRIBUTIONS
+	cp docs/ATTRIBUTIONS.md ATTRIBUTIONS
 
 	unset LLVM_SYS_140_PREFIX LLVM_VERSION WASMER_INSTALL_PREFIX
 }

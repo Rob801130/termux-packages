@@ -25,7 +25,7 @@ termux_pkg_upgrade_version() {
 		if [[ -z "${LATEST_VERSION}" ]]; then
 			termux_error_exit <<-EndOfError
 				ERROR: failed to filter version numbers using regexp '${TERMUX_PKG_UPDATE_VERSION_REGEXP}'.
-				Ensure that it is works correctly with ${OLD_LATEST_VERSION}.
+				Ensure that it works correctly with ${OLD_LATEST_VERSION}.
 			EndOfError
 		fi
 		unset OLD_LATEST_VERSION
@@ -39,7 +39,7 @@ termux_pkg_upgrade_version() {
 		if [[ -z "${LATEST_VERSION}" ]]; then
 			termux_error_exit <<-EndOfError
 				ERROR: failed to filter version numbers using regexp '${TERMUX_PKG_UPDATE_VERSION_SED_REGEXP}'.
-				Ensure that it is works correctly with ${OLD_LATEST_VERSION}.
+				Ensure that it works correctly with ${OLD_LATEST_VERSION}.
 			EndOfError
 		fi
 		unset OLD_LATEST_VERSION
@@ -55,6 +55,10 @@ termux_pkg_upgrade_version() {
 			echo "INFO: No update needed. Already at version '${LATEST_VERSION}'."
 			return 0
 		fi
+	fi
+
+	if [[ -n "${TERMUX_PKG_UPGRADE_VERSION_DRY_RUN:-}" ]]; then
+		return 1
 	fi
 
 	if [[ "${BUILD_PACKAGES}" == "false" ]]; then

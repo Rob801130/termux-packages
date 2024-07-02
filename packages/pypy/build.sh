@@ -3,9 +3,9 @@ TERMUX_PKG_DESCRIPTION="A fast, compliant alternative implementation of Python"
 TERMUX_PKG_LICENSE="MIT"
 TERMUX_PKG_MAINTAINER="@licy183"
 _MAJOR_VERSION=2.7
-TERMUX_PKG_VERSION="7.3.13"
+TERMUX_PKG_VERSION="7.3.15"
 TERMUX_PKG_SRCURL=https://downloads.python.org/pypy/pypy$_MAJOR_VERSION-v$TERMUX_PKG_VERSION-src.tar.bz2
-TERMUX_PKG_SHA256=976984bc6ca5ec9d37ae4e219b020cbed2751d1a02267033f59ed700ba8cec40
+TERMUX_PKG_SHA256=9e1a10d75eea8830f95035063e107bc7e4252a0b473407c929bf3d132ce6737f
 TERMUX_PKG_AUTO_UPDATE=true
 TERMUX_PKG_DEPENDS="gdbm, libandroid-posix-semaphore, libandroid-support, libbz2, libcrypt, libexpat, libffi, liblzma, libsqlite, ncurses, ncurses-ui-libs, openssl, zlib"
 TERMUX_PKG_BUILD_DEPENDS="binutils, clang, dash, make, ndk-multilib, pkg-config, python2, tk, xorgproto"
@@ -63,13 +63,13 @@ termux_step_pre_configure() {
 		$_undocker_url \
 		$TERMUX_PKG_CACHEDIR/undocker.py \
 		$_undocker_checksums
-	
+
 	# Get proot
 	termux_download \
 		$_proot_url \
 		$PROOT \
 		$_proot_checksums
-	
+
 	chmod +x $PROOT
 
 	# Get qemu-aarch64-static
@@ -154,7 +154,7 @@ termux_step_configure() {
 	ln -s $TERMUX_PKG_SRCDIR $PYPY_SRC_DIR
 	PROOT_HOST="env -i PROOT_NO_SECCOMP=1
 						$TERMUX_RUNTIME_ENV_VARS
-						$PROOT 
+						$PROOT
 						-b /proc -b /dev -b /sys
 						-b $HOME
 						-b $TERMUX_ANDROID_HOME
@@ -244,7 +244,7 @@ termux_step_make() {
 	cd $PYPY_USESSION_DIR
 	cd $(ls -C | awk '{print $1}')/testing_1
 	$PROOT_HOST env -C $(pwd) make clean
-	$PROOT_HOST env -C $(pwd) make -j$TERMUX_MAKE_PROCESSES
+	$PROOT_HOST env -C $(pwd) make -j$TERMUX_PKG_MAKE_PROCESSES
 
 	# Copy the built files
 	cp ./pypy-c $PYPY_SRC_DIR/pypy/goal/pypy-c

@@ -2,18 +2,19 @@ TERMUX_PKG_HOMEPAGE=https://www.nushell.sh
 TERMUX_PKG_DESCRIPTION="A new type of shell operating on structured data"
 TERMUX_PKG_LICENSE="MIT"
 TERMUX_PKG_MAINTAINER="@termux"
-TERMUX_PKG_VERSION="0.86.0"
+TERMUX_PKG_VERSION="0.95.0"
 TERMUX_PKG_SRCURL=https://github.com/nushell/nushell/archive/$TERMUX_PKG_VERSION.tar.gz
-TERMUX_PKG_SHA256=733576c766f087e4fdabee14bbcb0ba15516472d4f443fc401386cd1d6e8d7eb
+TERMUX_PKG_SHA256=f41a0f41af3996581f9bd485cfe5d55f26dd486dc3812b386bd43439c72a6d16
 TERMUX_PKG_AUTO_UPDATE=true
 TERMUX_PKG_DEPENDS="openssl, zlib"
 TERMUX_PKG_BUILD_IN_SRC=true
-TERMUX_PKG_EXTRA_CONFIGURE_ARGS="--features=extra"
+TERMUX_PKG_EXTRA_CONFIGURE_ARGS="
+--no-default-features
+--features=default-no-clipboard
+"
 
 termux_step_pre_configure() {
 	termux_setup_rust
-
-	export CFLAGS="${TARGET_CFLAGS}"
 
 	local _CARGO_TARGET_LIBDIR="target/${CARGO_TARGET_NAME}/release/deps"
 	mkdir -p $_CARGO_TARGET_LIBDIR
@@ -26,14 +27,25 @@ termux_step_pre_configure() {
 		echo "INPUT(-l:libunwind.a)" >libgcc.so
 		popd
 	fi
-	if [ $TERMUX_ARCH != "arm" ]; then
-		TERMUX_PKG_EXTRA_CONFIGURE_ARGS+=" --features=dataframe"
-	fi
 
 	: "${CARGO_HOME:=$HOME/.cargo}"
 	export CARGO_HOME
 
+	rm -rf $CARGO_HOME/registry/src/*/libmimalloc-sys-*
 	cargo fetch --target "${CARGO_TARGET_NAME}"
+
+	local d p
+	p="libmimalloc-sys-tls.diff"
+	for d in $CARGO_HOME/registry/src/*/libmimalloc-sys-*; do
+		patch --silent -p1 -d ${d} < "${TERMUX_PKG_BUILDER_DIR}/${p}"
+	done
+
+	# XXX: Do not enable `mimalloc` feature. It will fetch `libmimalloc-sys`,
+	# XXX: which needs to be patched to compile successfully, at building
+	# XXX: time. `cargo fetch` will not fetch its source.
+	# XXX: Besides, the above `libminalloc-sys` patch is also necessary because
+	# XXX: some dependencies of nushell refer to it.
+	sed -i 's/"mimalloc",/ /g' $TERMUX_PKG_SRCDIR/Cargo.toml
 
 	mv $TERMUX_PREFIX/lib/libz.so.1{,.tmp}
 	mv $TERMUX_PREFIX/lib/libz.so{,.tmp}
@@ -52,4 +64,6 @@ termux_step_post_make_install() {
 termux_step_post_massage() {
 	rm -f lib/libz.so.1
 	rm -f lib/libz.so
+
+	rm -rf $CARGO_HOME/registry/src/*/libmimalloc-sys-*
 }
