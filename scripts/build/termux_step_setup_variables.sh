@@ -5,7 +5,7 @@ termux_step_setup_variables() {
 	: "${TERMUX_FORCE_BUILD:="false"}"
 	: "${TERMUX_FORCE_BUILD_DEPENDENCIES:="false"}"
 	: "${TERMUX_INSTALL_DEPS:="false"}"
-	: "${TERMUX_MAKE_PROCESSES:="$(nproc)"}"
+	: "${TERMUX_PKG_MAKE_PROCESSES:="$(nproc)"}"
 	: "${TERMUX_NO_CLEAN:="false"}"
 	: "${TERMUX_PKG_API_LEVEL:="24"}"
 	: "${TERMUX_CONTINUE_BUILD:="false"}"
@@ -141,11 +141,11 @@ termux_step_setup_variables() {
 	TERMUX_PKG_DEPENDS=""
 	TERMUX_PKG_DESCRIPTION="FIXME:Add description"
 	TERMUX_PKG_DISABLE_GIR=false # termux_setup_gir
-	TERMUX_PKG_ENABLE_CLANG16_PORTING=true
 	TERMUX_PKG_ESSENTIAL=false
 	TERMUX_PKG_EXTRA_CONFIGURE_ARGS=""
 	TERMUX_PKG_EXTRA_HOSTBUILD_CONFIGURE_ARGS=""
 	TERMUX_PKG_EXTRA_MAKE_ARGS=""
+	TERMUX_PKG_EXTRA_UNDEF_SYMBOLS_TO_CHECK="" # space-separated undefined symbols to check in termux_step_massaging
 	TERMUX_PKG_FORCE_CMAKE=false # if the package has autotools as well as cmake, then set this to prefer cmake
 	TERMUX_PKG_GIT_BRANCH="" # branch defaults to 'v$TERMUX_PKG_VERSION' unless this variable is defined
 	TERMUX_PKG_GO_USE_OLDER=false # set to true to use the older supported release of Go.
@@ -174,6 +174,7 @@ termux_step_setup_variables() {
 	TERMUX_PKG_SRCDIR=$TERMUX_TOPDIR/$TERMUX_PKG_NAME/src
 	TERMUX_PKG_SUGGESTS=""
 	TERMUX_PKG_TMPDIR=$TERMUX_TOPDIR/$TERMUX_PKG_NAME/tmp
+	TERMUX_PKG_UNDEF_SYMBOLS_FILES="" # maintainer acknowledges these files have undefined symbols will not result in broken packages, eg: all, *.elf, ./path/to/file. "error" to always print results as errors
 	TERMUX_PKG_SERVICE_SCRIPT=() # Fill with entries like: ("daemon name" 'script to execute'). Script is echoed with -e so can contain \n for multiple lines
 	TERMUX_PKG_GROUPS="" # https://wiki.archlinux.org/title/Pacman#Installing_package_groups
 	TERMUX_PKG_ON_DEVICE_BUILD_NOT_SUPPORTED=false # if the package does not support compilation on a device, then this package should not be compiled on devices

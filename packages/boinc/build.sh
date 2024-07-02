@@ -4,9 +4,9 @@ TERMUX_PKG_LICENSE="LGPL-3.0"
 TERMUX_PKG_MAINTAINER="@termux"
 _MAJOR_VERSION=8
 _MINOR_VERSION=0
-TERMUX_PKG_VERSION="8.0.1"
-TERMUX_PKG_SRCURL=https://github.com/BOINC/boinc/archive/client_release/${_MAJOR_VERSION}.${_MINOR_VERSION}/${TERMUX_PKG_VERSION}.tar.gz
-TERMUX_PKG_SHA256=db808f95a99ba0f27674ad7ea0a5f8b9ae027aa0cb5cc58bd731051a6ec928b0
+TERMUX_PKG_VERSION="8.0.3"
+TERMUX_PKG_SRCURL=https://github.com/BOINC/boinc/archive/refs/tags/client_release/${_MAJOR_VERSION}.${_MINOR_VERSION}/${TERMUX_PKG_VERSION}.tar.gz
+TERMUX_PKG_SHA256=7cc5e6fa36393ca695b7bd8d4ac4a2593c860da0c3e78f5596bab7a132737674
 TERMUX_PKG_DEPENDS="libandroid-execinfo, libandroid-shmem, libc++, libcurl, openssl, zlib"
 TERMUX_PKG_NO_STATICSPLIT=true
 TERMUX_PKG_AUTO_UPDATE=true
@@ -28,7 +28,7 @@ termux_pkg_auto_update() {
 		return
 	fi
 
-	local latest_version=$(echo "${latest_refs_tags}" | tail -n1)
+	local latest_version=$(echo "${latest_refs_tags}" | sort -V | tail -n1)
 	if [[ "${latest_version}" == "${TERMUX_PKG_VERSION}" ]]; then
 		echo "INFO: No update needed. Already at version '${TERMUX_PKG_VERSION}'."
 		return
@@ -44,9 +44,10 @@ termux_pkg_auto_update() {
 
 	local major_version=$(echo "${latest_version}" | sed -E "s|([0-9]+).([0-9]+).([0-9]+)|\1|")
 	local minor_version=$(echo "${latest_version}" | sed -E "s|([0-9]+).([0-9]+).([0-9]+)|\2|")
-	sed -i "${TERMUX_PKG_BUILDER_DIR}/build.sh" \
+	sed \
 		-e "s|^_MAJOR_VERSION=.*|_MAJOR_VERSION=${major_version}|" \
-		-e "s|^_MINOR_VERSION=.*|_MINOR_VERSION=${minor_version}|"
+		-e "s|^_MINOR_VERSION=.*|_MINOR_VERSION=${minor_version}|" \
+		-i "${TERMUX_PKG_BUILDER_DIR}/build.sh"
 
 	termux_pkg_upgrade_version "${latest_version}" --skip-version-check
 }

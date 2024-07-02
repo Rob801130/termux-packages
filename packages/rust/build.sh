@@ -2,27 +2,78 @@ TERMUX_PKG_HOMEPAGE=https://www.rust-lang.org/
 TERMUX_PKG_DESCRIPTION="Systems programming language focused on safety, speed and concurrency"
 TERMUX_PKG_LICENSE="MIT"
 TERMUX_PKG_MAINTAINER="@termux"
-TERMUX_PKG_VERSION="1.77.0"
+TERMUX_PKG_VERSION="1.79.0"
+TERMUX_PKG_REVISION=1
 TERMUX_PKG_SRCURL=https://static.rust-lang.org/dist/rustc-${TERMUX_PKG_VERSION}-src.tar.xz
-TERMUX_PKG_SHA256=66126989782cbf77fa3aff121bbb108429f2d46fe19328c3de231553de711b90
+TERMUX_PKG_SHA256=ab826e84b8d48ec6eda3370065034dea8c006f6a946d78a9ba12bcb50e6d3c7a
 _LLVM_MAJOR_VERSION=$(. $TERMUX_SCRIPTDIR/packages/libllvm/build.sh; echo $LLVM_MAJOR_VERSION)
 _LLVM_MAJOR_VERSION_NEXT=$((_LLVM_MAJOR_VERSION + 1))
 _LZMA_VERSION=$(. $TERMUX_SCRIPTDIR/packages/liblzma/build.sh; echo $TERMUX_PKG_VERSION)
 TERMUX_PKG_DEPENDS="clang, libc++, libllvm (<< ${_LLVM_MAJOR_VERSION_NEXT}), lld, openssl, zlib"
 TERMUX_PKG_BUILD_DEPENDS="wasi-libc"
 TERMUX_PKG_NO_STATICSPLIT=true
+TERMUX_PKG_AUTO_UPDATE=true
 TERMUX_PKG_RM_AFTER_INSTALL="
 bin/llc
 bin/llvm-*
 bin/opt
 bin/sh
 lib/liblzma.a
+lib/liblzma.so
 lib/liblzma.so.${_LZMA_VERSION}
 lib/libtinfo.so.6
 lib/libz.so
 lib/libz.so.1
 share/wasi-sysroot
 "
+
+termux_pkg_auto_update() {
+	local e=0
+	local api_url1="https://releases.rs"
+	local api_url2="https://forge.rust-lang.org/infra/other-installation-methods.html"
+	local api_url1_r=$(curl -Ls "${api_url1}")
+	local api_url2_r=$(curl -Ls "${api_url2}")
+	local latest_version=$(echo "${api_url1_r}" | grep "html" | sed -ne "s|.*Stable: \([0-9]*\+.\+[0-9]*\+.\+[0-9]*\) Beta:.*|\1|p")
+	if [[ "${latest_version}" == "${TERMUX_PKG_VERSION}" ]]; then
+		echo "INFO: Already up to date."
+		return
+	fi
+	local latest_version_url=$(echo "${api_url2_r}" | grep static.rust-lang.org | sed -nE 's|.*(https.*.xz)".*|\1|p')
+	if [[ -z "$(echo ${latest_version_url} | grep ${latest_version})" ]]; then
+		echo -e "INFO: Not updating to ${latest_version}. Only these are available:\n${latest_version_url}"
+		return
+	fi
+	[[ -z "${api_url1_r}" ]] && e=1
+	[[ -z "${api_url2_r}" ]] && e=1
+	[[ -z "${latest_version}" ]] && e=1
+
+	local uptime_now=$(cat /proc/uptime)
+	local uptime_s="${uptime_now//.*}"
+	local uptime_h_limit=4
+	local uptime_s_limit=$((uptime_h_limit*60*60))
+	[[ -z "${uptime_s}" ]] && [[ "$(uname -o)" != "Android" ]] && e=1
+	[[ "${uptime_s}" == 0 ]] && [[ "$(uname -o)" != "Android" ]] && e=1
+	[[ "${uptime_s}" -gt "${uptime_s_limit}" ]] && e=1
+
+	if [[ "${e}" != 0 ]]; then
+		cat <<- EOL >&2
+		WARN: Auto update failure!
+		api_url1_r=${api_url1_r}
+		api_url2_r=${api_url2_r}
+		latest_version=${latest_version}
+		latest_version_url=${latest_version_url}
+		uptime_now=${uptime_now}
+		uptime_s=${uptime_s}
+		uptime_s_limit=${uptime_s_limit}
+		EOL
+		return
+	fi
+
+	sed \
+		-e "s/^\tlocal BOOTSTRAP_VERSION=.*/\tlocal BOOTSTRAP_VERSION=${TERMUX_PKG_VERSION}/" \
+		-i "${TERMUX_PKG_BUILDER_DIR}/build.sh"
+	termux_pkg_upgrade_version "${latest_version}"
+}
 
 termux_step_pre_configure() {
 	termux_setup_cmake
@@ -65,6 +116,7 @@ termux_step_pre_configure() {
 	# know where those are. Putting them temporarly in $PREFIX/lib prevents that failure
 	# https://github.com/termux/termux-packages/issues/11427
 	mv $TERMUX_PREFIX/lib/liblzma.a{,.tmp} || :
+	mv $TERMUX_PREFIX/lib/liblzma.so{,.tmp} || :
 	mv $TERMUX_PREFIX/lib/liblzma.so.${_LZMA_VERSION}{,.tmp} || :
 	mv $TERMUX_PREFIX/lib/libtinfo.so.6{,.tmp} || :
 	mv $TERMUX_PREFIX/lib/libz.so.1{,.tmp} || :
@@ -79,7 +131,7 @@ termux_step_configure() {
 	# like 30 to 40 + minutes ... so lets get it right
 
 	# upstream tests build using versions N and N-1
-	local BOOTSTRAP_VERSION="${TERMUX_PKG_VERSION}"
+	local BOOTSTRAP_VERSION=1.78.0
 	if rustup install $BOOTSTRAP_VERSION; then
 	rustup default $BOOTSTRAP_VERSION-x86_64-unknown-linux-gnu
 	export PATH=$HOME/.rustup/toolchains/$BOOTSTRAP_VERSION-x86_64-unknown-linux-gnu/bin:$PATH
@@ -114,6 +166,12 @@ termux_step_configure() {
 	# NDK r26
 	export CARGO_TARGET_${env_host}_RUSTFLAGS+=" -C link-arg=-lc++_shared"
 
+	# rust 1.79.0
+	# note: ld.lld: error: undefined reference due to --no-allow-shlib-undefined: syncfs
+	"${CC}" ${CPPFLAGS} -c "${TERMUX_PKG_BUILDER_DIR}/syncfs.c"
+	"${AR}" rcu "${RUST_LIBDIR}/libsyncfs.a" syncfs.o
+	export CARGO_TARGET_${env_host}_RUSTFLAGS+=" -C link-arg=-l:libsyncfs.a"
+
 	export X86_64_UNKNOWN_LINUX_GNU_OPENSSL_LIB_DIR=/usr/lib/x86_64-linux-gnu
 	export X86_64_UNKNOWN_LINUX_GNU_OPENSSL_INCLUDE_DIR=/usr/include
 	export PKG_CONFIG_ALLOW_CROSS=1
@@ -132,6 +190,15 @@ termux_step_make_install() {
 	# remove version suffix: beta, nightly
 	local TERMUX_PKG_VERSION=${TERMUX_PKG_VERSION//~*}
 
+	# needed to workaround build issue that only happens on x86_64
+	# /home/runner/.termux-build/rust/build/build/bootstrap/debug/bootstrap: error while loading shared libraries: /lib/x86_64-linux-gnu/libc.so: invalid ELF header
+	if [[ "$TERMUX_ARCH" == "x86_64" ]]; then
+		mv ${TERMUX_PREFIX}{,.tmp}
+		$TERMUX_PKG_SRCDIR/x.py build --host x86_64-unknown-linux-gnu --stage 1 cargo
+		[[ -d "${TERMUX_PREFIX}" ]] && termux_error_exit "Contaminated PREFIX found:\n$(find ${TERMUX_PREFIX} | sort)"
+		mv ${TERMUX_PREFIX}{.tmp,}
+	fi
+
 	if ! :; then
 	# speed up building rust for testing
 	$TERMUX_PKG_SRCDIR/x.py install --stage 1 --target $CARGO_TARGET_NAME
@@ -144,6 +211,8 @@ termux_step_make_install() {
 	$TERMUX_PKG_SRCDIR/x.py install --stage 1 --target x86_64-linux-android
 	$TERMUX_PKG_SRCDIR/x.py install --stage 1 std --target wasm32-unknown-unknown
 	$TERMUX_PKG_SRCDIR/x.py install --stage 1 std --target wasm32-wasi
+	$TERMUX_PKG_SRCDIR/x.py install --stage 1 std --target wasm32-wasip1
+	$TERMUX_PKG_SRCDIR/x.py install --stage 1 std --target wasm32-wasip2
 
 	$TERMUX_PKG_SRCDIR/x.py dist rustc-dev --host $CARGO_TARGET_NAME --target aarch64-linux-android
 	$TERMUX_PKG_SRCDIR/x.py dist rustc-dev --host $CARGO_TARGET_NAME --target armv7-linux-androideabi
@@ -151,6 +220,8 @@ termux_step_make_install() {
 	$TERMUX_PKG_SRCDIR/x.py dist rustc-dev --host $CARGO_TARGET_NAME --target x86_64-linux-android
 	$TERMUX_PKG_SRCDIR/x.py dist rustc-dev --host $CARGO_TARGET_NAME --target wasm32-unknown-unknown
 	$TERMUX_PKG_SRCDIR/x.py dist rustc-dev --host $CARGO_TARGET_NAME --target wasm32-wasi
+	$TERMUX_PKG_SRCDIR/x.py dist rustc-dev --host $CARGO_TARGET_NAME --target wasm32-wasip1
+	$TERMUX_PKG_SRCDIR/x.py dist rustc-dev --host $CARGO_TARGET_NAME --target wasm32-wasip2
 	fi
 
 	tar -xvf build/dist/rustc-dev-$TERMUX_PKG_VERSION-$CARGO_TARGET_NAME.tar.gz
@@ -159,6 +230,7 @@ termux_step_make_install() {
 	cd "$TERMUX_PREFIX/lib"
 	rm -f libc.so libdl.so
 	mv liblzma.a{.tmp,} || :
+	mv liblzma.so{.tmp,} || :
 	mv liblzma.so.${_LZMA_VERSION}{.tmp,} || :
 	mv libtinfo.so.6{.tmp,} || :
 	mv libz.so.1{.tmp,} || :

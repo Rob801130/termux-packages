@@ -2,10 +2,9 @@ TERMUX_PKG_HOMEPAGE=https://github.com/Canop/broot
 TERMUX_PKG_DESCRIPTION="A better way to navigate directories"
 TERMUX_PKG_LICENSE="MIT"
 TERMUX_PKG_MAINTAINER="@termux"
-TERMUX_PKG_VERSION="1.36.1"
-TERMUX_PKG_REVISION=1
+TERMUX_PKG_VERSION="1.39.0"
 TERMUX_PKG_SRCURL=https://github.com/Canop/broot/archive/refs/tags/v${TERMUX_PKG_VERSION}.tar.gz
-TERMUX_PKG_SHA256=b52e60a86e3ca38931cf8ed0ccbd4138f12b733c2459ea3088c267a98b8a555b
+TERMUX_PKG_SHA256=d1d2ccc11543ff4ea645d57a5e78639542a6f510b585a78c31ddb3a24399bf61
 TERMUX_PKG_DEPENDS="libgit2"
 TERMUX_PKG_BUILD_IN_SRC=true
 TERMUX_PKG_AUTO_UPDATE=true
@@ -26,7 +25,7 @@ termux_step_pre_configure() {
 }
 
 termux_step_make() {
-	cargo build --jobs $TERMUX_MAKE_PROCESSES --target $CARGO_TARGET_NAME --release
+	cargo build --jobs $TERMUX_PKG_MAKE_PROCESSES --target $CARGO_TARGET_NAME --release
 
 	mkdir -p build
 	cp man/page build/broot.1

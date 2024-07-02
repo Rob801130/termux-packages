@@ -2,7 +2,7 @@ TERMUX_PKG_HOMEPAGE=https://emscripten.org
 TERMUX_PKG_DESCRIPTION="Emscripten: An LLVM-to-WebAssembly Compiler"
 TERMUX_PKG_LICENSE="MIT"
 TERMUX_PKG_MAINTAINER="@termux"
-TERMUX_PKG_VERSION="3.1.57"
+TERMUX_PKG_VERSION="3.1.61"
 TERMUX_PKG_SRCURL=git+https://github.com/emscripten-core/emscripten
 TERMUX_PKG_GIT_BRANCH=${TERMUX_PKG_VERSION}
 TERMUX_PKG_DEPENDS="nodejs-lts | nodejs, python"
@@ -61,13 +61,13 @@ opt/emscripten/LICENSE
 
 # https://github.com/emscripten-core/emscripten/issues/11362
 # can switch to stable LLVM to save space once above is fixed
-_LLVM_COMMIT=ccdebbae4d77d3efc236af92c22941de5d437e01
-_LLVM_TGZ_SHA256=32a4416ae815be3622de7501011d3f67a5ffe86e15072aa22e613aed5340ce98
+_LLVM_COMMIT=7cfffe74eeb68fbb3fb9706ac7071f8caeeb6520
+_LLVM_TGZ_SHA256=0a65e5533d70f210f2f17f2c6db64750e90d8f6f8b208304313b4229dc0f9fdd
 
 # https://github.com/emscripten-core/emscripten/issues/12252
 # upstream says better bundle the right binaryen revision for now
-_BINARYEN_COMMIT=f0dd9941de2df62e0a29f2faeadf007e37a425a9
-_BINARYEN_TGZ_SHA256=32b12fcb4bc96e3d43e329b90f617993c90150c5414f950fe4f65b1b9cd0251e
+_BINARYEN_COMMIT=5d90167464ef5709406aea7d87ad1657eec8618b
+_BINARYEN_TGZ_SHA256=c53282d36a891a8e68429071bd84a26eee9e650c009139dab374e132a54577e7
 
 # https://github.com/emscripten-core/emsdk/blob/main/emsdk.py
 # https://chromium.googlesource.com/emscripten-releases/+/refs/heads/main/src/build.py
@@ -228,7 +228,7 @@ termux_step_host_build() {
 		-DLLVM_INCLUDE_UTILS=OFF
 	ninja \
 		-C "${TERMUX_PKG_HOSTBUILD_DIR}" \
-		-j "${TERMUX_MAKE_PROCESSES}" \
+		-j "${TERMUX_PKG_MAKE_PROCESSES}" \
 		llvm-tblgen clang-tblgen
 }
 
@@ -285,7 +285,7 @@ termux_step_make() {
 		${_LLVM_BUILD_ARGS}
 	ninja \
 		-C "${TERMUX_PKG_BUILDDIR}/build-llvm" \
-		-j "${TERMUX_MAKE_PROCESSES}" \
+		-j "${TERMUX_PKG_MAKE_PROCESSES}" \
 		install
 
 	cmake \
@@ -295,7 +295,7 @@ termux_step_make() {
 		${_BINARYEN_BUILD_ARGS}
 	ninja \
 		-C "${TERMUX_PKG_BUILDDIR}/build-binaryen" \
-		-j "${TERMUX_MAKE_PROCESSES}" \
+		-j "${TERMUX_PKG_MAKE_PROCESSES}" \
 		install
 }
 

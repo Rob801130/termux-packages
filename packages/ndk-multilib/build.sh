@@ -18,7 +18,7 @@ prepare_libs() {
 	local NDK_SUFFIX=$SUFFIX
 
 	if [ $ARCH = x86 ] || [ $ARCH = x86_64 ]; then
-	    NDK_SUFFIX=$ARCH
+		NDK_SUFFIX=$ARCH
 	fi
 
 	mkdir -p $TERMUX_PKG_MASSAGEDIR/$TERMUX_PREFIX/$SUFFIX/lib
@@ -87,4 +87,3 @@ termux_step_create_debscripts() {
 		$TERMUX_PKG_BUILDER_DIR/postinst-alien.in >> prerm
 	chmod 0700 postinst prerm
 }
-

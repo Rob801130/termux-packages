@@ -4,6 +4,7 @@ TERMUX_PKG_LICENSE="MIT"
 TERMUX_PKG_MAINTAINER="@licy183"
 TERMUX_PKG_VERSION=(1.0.1)
 TERMUX_PKG_VERSION+=(1.5.10) # libepoxy version
+TERMUX_PKG_REVISION=1
 TERMUX_PKG_SRCURL=(https://gitlab.freedesktop.org/virgl/virglrenderer/-/archive/virglrenderer-${TERMUX_PKG_VERSION[0]}/virglrenderer-virglrenderer-${TERMUX_PKG_VERSION[0]}.tar.gz)
 TERMUX_PKG_SRCURL+=(https://github.com/anholt/libepoxy/archive/refs/tags/${TERMUX_PKG_VERSION[1]}.tar.gz)
 TERMUX_PKG_SHA256=(446ab3e265f574ec598e77bdfbf0616ee3c77361f0574bec733ba4bac4df730a)
@@ -51,20 +52,20 @@ termux_step_host_build() {
 	# Compile libepoxy
 	mkdir -p libepoxy-build
 	$TERMUX_MESON $TERMUX_PKG_SRCDIR/libepoxy libepoxy-build \
-        --cross-file $TERMUX_MESON_CROSSFILE \
-        --prefix=$_INSTALL_PREFIX \
+		--cross-file $TERMUX_MESON_CROSSFILE \
+		--prefix=$_INSTALL_PREFIX \
 		--libdir lib \
-        -Degl=yes -Dglx=no -Dx11=false
-	ninja -C libepoxy-build install -j $TERMUX_MAKE_PROCESSES
+		-Degl=yes -Dglx=no -Dx11=false
+	ninja -C libepoxy-build install -j $TERMUX_PKG_MAKE_PROCESSES
 
 	# Compile virglrenderer
 	mkdir -p virglrenderer-build
 	$TERMUX_MESON $TERMUX_PKG_SRCDIR virglrenderer-build \
-        --cross-file $TERMUX_MESON_CROSSFILE \
-        --prefix=$_INSTALL_PREFIX \
+		--cross-file $TERMUX_MESON_CROSSFILE \
+		--prefix=$_INSTALL_PREFIX \
 		--libdir lib \
-        -Dplatforms=egl
-	ninja -C virglrenderer-build install -j $TERMUX_MAKE_PROCESSES
+		-Dplatforms=egl
+	ninja -C virglrenderer-build install -j $TERMUX_PKG_MAKE_PROCESSES
 }
 
 termux_step_configure() {

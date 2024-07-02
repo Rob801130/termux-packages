@@ -69,8 +69,13 @@ termux_setup_toolchain_26b() {
 	# We might also want to consider shipping libomp.so instead; since r21
 	LDFLAGS+=" -fopenmp -static-openmp"
 	if [ "$TERMUX_ON_DEVICE_BUILD" = "false" ]; then
-  		LDFLAGS+=" -fno-openmp-implicit-rpath"
-    	fi
+		LDFLAGS+=" -fno-openmp-implicit-rpath"
+	fi
+
+	# Remove option `openmp-implicit-rpath` in next NDK major bump.
+	if [ "$TERMUX_NDK_VERSION_NUM" != 26 ]; then
+		termux_error_exit "Remove the useless option \`-fopenmp-implicit-rpath\` and rebuild the libllvm."
+	fi
 
 	# Android 7 started to support DT_RUNPATH (but not DT_RPATH).
 	LDFLAGS+=" -Wl,--enable-new-dtags"
@@ -100,8 +105,9 @@ termux_setup_toolchain_26b() {
 	export GOOS=android
 	export CGO_ENABLED=1
 	export GO_LDFLAGS="-extldflags=-pie"
-	export CGO_LDFLAGS="${LDFLAGS/-Wl,-z,relro,-z,now/}"
-	CGO_LDFLAGS="${LDFLAGS/-static-openmp/}"
+	export CGO_LDFLAGS="${LDFLAGS/ -Wl,-z,relro,-z,now/}"
+	CGO_LDFLAGS="${CGO_LDFLAGS/ -static-openmp/}"
+	CGO_LDFLAGS="${CGO_LDFLAGS/ -fno-openmp-implicit-rpath/}"
 	export CGO_CFLAGS="-I$TERMUX_PREFIX/include"
 	export RUSTFLAGS="-C link-arg=-Wl,-rpath=$TERMUX_PREFIX/lib -C link-arg=-Wl,--enable-new-dtags"
 
@@ -117,15 +123,6 @@ termux_setup_toolchain_26b() {
 	fi
 
 	if [ -d $TERMUX_STANDALONE_TOOLCHAIN ]; then
-		for HOST_PLAT in aarch64-linux-android armv7a-linux-androideabi i686-linux-android x86_64-linux-android arm-linux-androideabi; do
-			if [ "$TERMUX_PKG_ENABLE_CLANG16_PORTING" = "true" ]; then
-				cp $TERMUX_STANDALONE_TOOLCHAIN/bin/$HOST_PLAT-clang.16-porting \
-					$TERMUX_STANDALONE_TOOLCHAIN/bin/$HOST_PLAT-clang
-			else
-				cp $TERMUX_STANDALONE_TOOLCHAIN/bin/$HOST_PLAT-clang.no-16-porting \
-					$TERMUX_STANDALONE_TOOLCHAIN/bin/$HOST_PLAT-clang
-			fi
-		done
 		return
 	fi
 
@@ -168,22 +165,6 @@ termux_setup_toolchain_26b() {
 		$_TERMUX_TOOLCHAIN_TMPDIR/bin/arm-linux-androideabi-clang++
 	cp $_TERMUX_TOOLCHAIN_TMPDIR/bin/armv7a-linux-androideabi-cpp \
 		$_TERMUX_TOOLCHAIN_TMPDIR/bin/arm-linux-androideabi-cpp
-
-	for HOST_PLAT in aarch64-linux-android armv7a-linux-androideabi i686-linux-android x86_64-linux-android arm-linux-androideabi; do
-		mv $_TERMUX_TOOLCHAIN_TMPDIR/bin/$HOST_PLAT-clang \
-			$_TERMUX_TOOLCHAIN_TMPDIR/bin/$HOST_PLAT-clang.no-16-porting
-		cp $_TERMUX_TOOLCHAIN_TMPDIR/bin/$HOST_PLAT-clang.no-16-porting \
-			$_TERMUX_TOOLCHAIN_TMPDIR/bin/$HOST_PLAT-clang.16-porting
-		sed -i 's/"\$@"/--start-no-unused-arguments -Wno-error=implicit-function-declaration -Wno-error=implicit-int -Wno-error=int-conversion -Wno-error=incompatible-function-pointer-types --end-no-unused-arguments \0/g' \
-			$_TERMUX_TOOLCHAIN_TMPDIR/bin/$HOST_PLAT-clang.no-16-porting
-		if [ "$TERMUX_PKG_ENABLE_CLANG16_PORTING" = "true" ]; then
-			cp $_TERMUX_TOOLCHAIN_TMPDIR/bin/$HOST_PLAT-clang.16-porting \
-				$_TERMUX_TOOLCHAIN_TMPDIR/bin/$HOST_PLAT-clang
-		else
-			cp $_TERMUX_TOOLCHAIN_TMPDIR/bin/$HOST_PLAT-clang.no-16-porting \
-				$_TERMUX_TOOLCHAIN_TMPDIR/bin/$HOST_PLAT-clang
-		fi
-	done
 
 	# rust 1.75.0+ expects this directory to be present
 	rm -fr "${_TERMUX_TOOLCHAIN_TMPDIR}"/toolchains

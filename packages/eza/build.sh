@@ -2,9 +2,9 @@ TERMUX_PKG_HOMEPAGE=https://github.com/eza-community/eza
 TERMUX_PKG_DESCRIPTION="A modern replacement for ls"
 TERMUX_PKG_LICENSE="MIT"
 TERMUX_PKG_MAINTAINER="Joshua Kahn @TomJo2000"
-TERMUX_PKG_VERSION="0.18.10"
+TERMUX_PKG_VERSION="0.18.21"
 TERMUX_PKG_SRCURL=https://github.com/eza-community/eza/archive/v${TERMUX_PKG_VERSION}.tar.gz
-TERMUX_PKG_SHA256=b0b59a7bdd7536941fac210ca25d30f904657f906aa2c01411fb390d4bdcd139
+TERMUX_PKG_SHA256=53cee12706be2b5bedcf40b97e077a18b254f0f53f1aee52d1d74136466045bc
 TERMUX_PKG_AUTO_UPDATE=true
 TERMUX_PKG_DEPENDS="libgit2"
 TERMUX_PKG_BREAKS="exa"
@@ -35,4 +35,3 @@ termux_step_post_make_install() {
 	install -Dm600 completions/fish/eza.fish $TERMUX_PREFIX/share/fish/vendor_completions.d/eza.fish
 	install -Dm600 completions/zsh/_eza $TERMUX_PREFIX/share/zsh/site-functions/_eza
 }
-

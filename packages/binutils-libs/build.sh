@@ -36,7 +36,7 @@ TERMUX_PKG_EXTRA_HOSTBUILD_CONFIGURE_ARGS="
 
 termux_step_host_build() {
 	$TERMUX_PKG_SRCDIR/configure $TERMUX_PKG_EXTRA_HOSTBUILD_CONFIGURE_ARGS
-	make -j $TERMUX_MAKE_PROCESSES
+	make -j $TERMUX_PKG_MAKE_PROCESSES
 	make install
 	make install-strip
 }
@@ -53,7 +53,7 @@ termux_step_pre_configure() {
 	# others, including the rust toolchain) to fail like so:
 	#
 	# ld.lld: error: version script assignment of 'LIBCTF_1.0' to symbol 'ctf_label_set' failed: symbol not defined
-  # ld.lld: error: version script assignment of 'LIBCTF_1.0' to symbol 'ctf_label_get' failed: symbol not defined
+	# ld.lld: error: version script assignment of 'LIBCTF_1.0' to symbol 'ctf_label_get' failed: symbol not defined
 	# These flags restore it to a warning.
 	# https://reviews.llvm.org/D135402
 	export LDFLAGS="$LDFLAGS -Wl,--undefined-version"
