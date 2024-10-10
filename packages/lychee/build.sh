@@ -3,9 +3,9 @@ TERMUX_PKG_DESCRIPTION="A fast, async, resource-friendly link checker written in
 TERMUX_PKG_LICENSE="MIT"
 TERMUX_PKG_LICENSE_FILE="LICENSE-MIT, LICENSE-APACHE"
 TERMUX_PKG_MAINTAINER="Yaksh Bariya <thunder-coding@termux.dev>"
-TERMUX_PKG_VERSION="0.13.0"
-TERMUX_PKG_SRCURL=https://github.com/lycheeverse/lychee/archive/refs/tags/v${TERMUX_PKG_VERSION}.tar.gz
-TERMUX_PKG_SHA256=5df8610e4bbf657bd5094305ccc2e1febff70b4f470acc3eb2e782d518fa962f
+TERMUX_PKG_VERSION="0.16.1"
+TERMUX_PKG_SRCURL=https://github.com/lycheeverse/lychee/archive/refs/tags/lychee-v${TERMUX_PKG_VERSION}.tar.gz
+TERMUX_PKG_SHA256=ee61627083c80459e0f6a48c11cd910711c86b744a294b6a00f7072dffa1b04b
 TERMUX_PKG_AUTO_UPDATE=true
 TERMUX_PKG_DEPENDS="openssl, resolv-conf"
 TERMUX_PKG_BUILD_IN_SRC=true
@@ -26,7 +26,7 @@ termux_step_pre_configure() {
 }
 
 termux_step_make() {
-	cargo build --jobs $TERMUX_MAKE_PROCESSES --target $CARGO_TARGET_NAME --release
+	cargo build --jobs $TERMUX_PKG_MAKE_PROCESSES --target $CARGO_TARGET_NAME --release
 }
 
 termux_step_make_install() {

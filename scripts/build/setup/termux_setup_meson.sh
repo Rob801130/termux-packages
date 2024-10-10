@@ -1,6 +1,6 @@
 termux_setup_meson() {
 	termux_setup_ninja
-	local MESON_VERSION=1.2.2
+	local MESON_VERSION=1.5.2
 	local MESON_FOLDER
 
 	if [ "${TERMUX_PACKAGES_OFFLINE-false}" = "true" ]; then
@@ -16,7 +16,7 @@ termux_setup_meson() {
 		termux_download \
 			"https://github.com/mesonbuild/meson/releases/download/$MESON_VERSION/meson-$MESON_VERSION.tar.gz" \
 			"$MESON_TAR_FILE" \
-			4a0f04de331fbc7af3b802a844fc8838f4ccd1ded1e792ba4f8f2faf8c5fe4d6
+			f955e09ab0d71ef180ae85df65991d58ed8430323de7d77a37e11c9ea630910b
 		tar xf "$MESON_TAR_FILE" -C "$TERMUX_PKG_TMPDIR"
 		shopt -s nullglob
 		local f
@@ -53,12 +53,14 @@ termux_setup_meson() {
 	echo "cmake = 'cmake'" >> $TERMUX_MESON_CROSSFILE
 	echo "cpp = '$CXX'" >> $TERMUX_MESON_CROSSFILE
 	echo "ld = '$LD'" >> $TERMUX_MESON_CROSSFILE
-	echo "pkgconfig = '$PKG_CONFIG'" >> $TERMUX_MESON_CROSSFILE
+	echo "pkg-config = '$PKG_CONFIG'" >> $TERMUX_MESON_CROSSFILE
 	echo "strip = '$STRIP'" >> $TERMUX_MESON_CROSSFILE
 
-	echo '' >> $TERMUX_MESON_CROSSFILE
-	echo "[properties]" >> $TERMUX_MESON_CROSSFILE
-	echo "needs_exe_wrapper = true" >> $TERMUX_MESON_CROSSFILE
+	if [ "$TERMUX_PACKAGE_LIBRARY" = "bionic" ]; then
+		echo '' >> $TERMUX_MESON_CROSSFILE
+		echo "[properties]" >> $TERMUX_MESON_CROSSFILE
+		echo "needs_exe_wrapper = true" >> $TERMUX_MESON_CROSSFILE
+  	fi
 
 	echo '' >> $TERMUX_MESON_CROSSFILE
 	echo "[built-in options]" >> $TERMUX_MESON_CROSSFILE
@@ -88,7 +90,7 @@ termux_setup_meson() {
 	echo ']' >> $TERMUX_MESON_CROSSFILE
 
 	local property
-	for property in c_link_args cpp_link_args; do
+	for property in c_link_args cpp_link_args fortran_link_args; do
 		echo -n "$property = [" >> $TERMUX_MESON_CROSSFILE
 		first=true
 		for word in $LDFLAGS; do
