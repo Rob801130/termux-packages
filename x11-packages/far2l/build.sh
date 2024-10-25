@@ -1,10 +1,11 @@
 TERMUX_PKG_HOMEPAGE=https://github.com/elfmz/far2l
 TERMUX_PKG_DESCRIPTION="FAR Manager v2"
 TERMUX_PKG_LICENSE="GPL-2.0"
-TERMUX_PKG_MAINTAINER="@spvkgn"
-TERMUX_PKG_VERSION=2.5.2
-TERMUX_PKG_SRCURL=https://github.com/elfmz/far2l/archive/v_${TERMUX_PKG_VERSION}.tar.gz
-TERMUX_PKG_SHA256=c8ae8bd7b9f242e267f4b13c81735706accdc40046dd262d30a4017b703f36b7
+TERMUX_PKG_MAINTAINER="@termux"
+TERMUX_PKG_VERSION="2.6.3"
+TERMUX_PKG_REVISION=1
+TERMUX_PKG_SRCURL=https://github.com/elfmz/far2l/archive/refs/tags/v_${TERMUX_PKG_VERSION}.tar.gz
+TERMUX_PKG_SHA256=ffb216a4f9b24bb45a2194d5e833c60334a4f4e9150c1ce0fc8eddffa6a9e173
 TERMUX_PKG_DEPENDS="libarchive, libc++, libuchardet, pcre"
 TERMUX_PKG_SUGGESTS="chafa, exiftool, htop, timg"
 TERMUX_PKG_RM_AFTER_INSTALL="share/icons share/applications"
