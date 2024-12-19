@@ -3,14 +3,14 @@ TERMUX_PKG_DESCRIPTION="An extremely fast Python linter, written in Rust"
 TERMUX_PKG_LICENSE="MIT"
 TERMUX_PKG_LICENSE_FILE="../../LICENSE"
 TERMUX_PKG_MAINTAINER="@termux"
-TERMUX_PKG_VERSION="0.1.2"
-TERMUX_PKG_SRCURL="https://github.com/charliermarsh/ruff/archive/refs/tags/v$TERMUX_PKG_VERSION.tar.gz"
-TERMUX_PKG_SHA256=2135ea2f647a17e9060a3ca10f6df2be9e37ae87c864fe79dd3c067ba6ee57b2
+TERMUX_PKG_VERSION="0.8.3"
+TERMUX_PKG_SRCURL="https://github.com/charliermarsh/ruff/archive/refs/tags/$TERMUX_PKG_VERSION.tar.gz"
+TERMUX_PKG_SHA256=ff00bb1ca1a9de60aed3965d671c6a3d448a87a9016ba6d6b3a396760422bc25
 TERMUX_PKG_AUTO_UPDATE=true
 TERMUX_PKG_BUILD_IN_SRC=true
 
 termux_step_pre_configure() {
-	TERMUX_PKG_SRCDIR+="/crates/ruff_cli"
+	TERMUX_PKG_SRCDIR+="/crates/ruff"
 	TERMUX_PKG_BUILDDIR="${TERMUX_PKG_SRCDIR}"
 
 	cd $TERMUX_PKG_BUILDDIR
@@ -18,10 +18,11 @@ termux_step_pre_configure() {
 	mkdir -p _lib
 	cd _lib
 	$CC $CPPFLAGS $CFLAGS -fvisibility=hidden \
-		-c $TERMUX_PKG_BUILDER_DIR/ctermid.c 
+		-c $TERMUX_PKG_BUILDER_DIR/ctermid.c
 	$AR cru libctermid.a ctermid.o
 
-	RUSTFLAGS+=" -C link-arg=$TERMUX_PKG_BUILDDIR/_lib/libctermid.a"
+	local env_host=$(printf $CARGO_TARGET_NAME | tr a-z A-Z | sed s/-/_/g)
+	export CARGO_TARGET_${env_host}_RUSTFLAGS+=" -C link-arg=$TERMUX_PKG_BUILDDIR/_lib/libctermid.a"
 
 	termux_setup_rust
 
