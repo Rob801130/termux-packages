@@ -4,12 +4,12 @@ TERMUX_PKG_DESCRIPTION="Python 3 programming language intended to enable clear p
 TERMUX_PKG_LICENSE="custom"
 TERMUX_PKG_LICENSE_FILE="LICENSE"
 TERMUX_PKG_MAINTAINER="@termux"
-TERMUX_PKG_VERSION=3.11.6
-TERMUX_PKG_REVISION=1
+TERMUX_PKG_VERSION=3.12.8
 TERMUX_PKG_SRCURL=https://www.python.org/ftp/python/${TERMUX_PKG_VERSION}/Python-${TERMUX_PKG_VERSION}.tar.xz
-TERMUX_PKG_SHA256=0fab78fa7f133f4f38210c6260d90d7c0d5c7198446419ce057ec7ac2e6f5f38
+TERMUX_PKG_SHA256=c909157bb25ec114e5869124cc2a9c4a4d4c1e957ca4ff553f1edc692101154e
 TERMUX_PKG_AUTO_UPDATE=false
 TERMUX_PKG_DEPENDS="gdbm, libandroid-posix-semaphore, libandroid-support, libbz2, libcrypt, libexpat, libffi, liblzma, libsqlite, ncurses, ncurses-ui-libs, openssl, readline, zlib"
+TERMUX_PKG_BUILD_DEPENDS="tk"
 TERMUX_PKG_RECOMMENDS="python-ensurepip-wheels, python-pip"
 TERMUX_PKG_SUGGESTS="python-tkinter"
 TERMUX_PKG_BREAKS="python2 (<= 2.7.15), python-dev"
@@ -18,7 +18,7 @@ TERMUX_PKG_REPLACES="python-dev"
 TERMUX_PKG_PROVIDES="python3"
 
 # https://github.com/termux/termux-packages/issues/15908
-TERMUX_MAKE_PROCESSES=1
+TERMUX_PKG_MAKE_PROCESSES=1
 
 _MAJOR_VERSION="${TERMUX_PKG_VERSION%.*}"
 
@@ -46,6 +46,8 @@ TERMUX_PKG_EXTRA_CONFIGURE_ARGS+=" ac_cv_func_sem_unlink=yes"
 # Force enable posix shared memory.
 TERMUX_PKG_EXTRA_CONFIGURE_ARGS+=" ac_cv_func_shm_open=yes"
 TERMUX_PKG_EXTRA_CONFIGURE_ARGS+=" ac_cv_func_shm_unlink=yes"
+# Assume tzset() works
+TERMUX_PKG_EXTRA_CONFIGURE_ARGS+=" ac_cv_working_tzset=yes"
 
 TERMUX_PKG_RM_AFTER_INSTALL="
 lib/python${_MAJOR_VERSION}/test
@@ -75,17 +77,20 @@ termux_step_pre_configure() {
 		TERMUX_PKG_EXTRA_CONFIGURE_ARGS+=" --with-build-python=python$_MAJOR_VERSION"
 	fi
 
+	# For multiprocessing libs
+	export LDFLAGS+=" -landroid-posix-semaphore"
+
 	export LIBCRYPT_LIBS="-lcrypt"
 }
 
 termux_step_post_make_install() {
 	(cd $TERMUX_PREFIX/bin
-	 ln -sf idle${_MAJOR_VERSION} idle
-	 ln -sf python${_MAJOR_VERSION} python
-	 ln -sf python${_MAJOR_VERSION}-config python-config
-	 ln -sf pydoc${_MAJOR_VERSION} pydoc)
+	ln -sf idle${_MAJOR_VERSION} idle
+	ln -sf python${_MAJOR_VERSION} python
+	ln -sf python${_MAJOR_VERSION}-config python-config
+	ln -sf pydoc${_MAJOR_VERSION} pydoc)
 	(cd $TERMUX_PREFIX/share/man/man1
-	 ln -sf python${_MAJOR_VERSION}.1 python.1)
+	ln -sf python${_MAJOR_VERSION}.1 python.1)
 }
 
 termux_step_post_massage() {
@@ -116,6 +121,14 @@ termux_step_create_debscripts() {
 		echo "== Note: pip is now separate from python =="
 		echo "To install, enter the following command:"
 		echo "   pkg install python-pip"
+		echo
+	fi
+
+	if [ -d $TERMUX_PREFIX/lib/python3.11/site-packages ]; then
+		echo
+		echo "NOTE: The system python package has been updated to 3.12."
+		echo "NOTE: Run 'pkg upgrade' to update system python packages."
+		echo "NOTE: Packages installed using pip needs to be re-installed."
 		echo
 	fi
 
