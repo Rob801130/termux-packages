@@ -359,28 +359,6 @@ diff --git a/swift-corelibs-foundation/Package.swift b/swift-corelibs-foundation
          ),
          .target(
              name: "_CFXMLInterface",
-diff --git a/swift-corelibs-foundation/Sources/Foundation/FileManager+POSIX.swift b/swift-corelibs-foundation/Sources/Foundation/FileManager+POSIX.swift
-index e89b3bf6..a82fe1c2 100644
---- a/swift-corelibs-foundation/Sources/Foundation/FileManager+POSIX.swift
-+++ b/swift-corelibs-foundation/Sources/Foundation/FileManager+POSIX.swift
-@@ -347,10 +351,17 @@
-             do {
-                 guard fm.fileExists(atPath: _url.path) else { throw _NSErrorWithErrno(ENOENT, reading: true, url: url) }
-                 _stream = try FileManager.default._fileSystemRepresentation(withPath: _url.path) { fsRep in
-+#if canImport(Android)
-+                    let ps = UnsafeMutablePointer<UnsafeMutablePointer<Int8>>.allocate(capacity: 2)
-+                    defer { ps.deallocate() }
-+                    ps.initialize(to: UnsafeMutablePointer(mutating: fsRep))
-+                    ps.advanced(by: 1).initialize(to: unsafeBitCast(0, to: UnsafeMutablePointer<Int8>.self))
-+#else
-                     let ps = UnsafeMutablePointer<UnsafeMutablePointer<Int8>?>.allocate(capacity: 2)
-                     defer { ps.deallocate() }
-                     ps.initialize(to: UnsafeMutablePointer(mutating: fsRep))
-                     ps.advanced(by: 1).initialize(to: nil)
-+#endif
-                     return fts_open(ps, FTS_PHYSICAL | FTS_XDEV | FTS_NOCHDIR | FTS_NOSTAT, nil)
-                 }
-                 if _stream == nil {
 diff --git a/swift-corelibs-foundation/Sources/Foundation/NSPathUtilities.swift b/swift-corelibs-foundation/Sources/Foundation/NSPathUtilities.swift
 --- a/swift-corelibs-foundation/Sources/Foundation/NSPathUtilities.swift
 +++ b/swift-corelibs-foundation/Sources/Foundation/NSPathUtilities.swift
@@ -408,36 +386,22 @@ index 758dd1df..02970992 100644
              if !useFallbackChdir {
                  try _throwIfPosixError(chdirResult)
              }
-diff --git a/swift-foundation/Sources/FoundationEssentials/FileManager/FileOperations+Enumeration.swift b/swift-foundation/Sources/FoundationEssentials/FileManager/FileOperations+Enumeration.swift
---- a/swift-foundation/Sources/FoundationEssentials/FileManager/FileOperations+Enumeration.swift
-+++ b/swift-foundation/Sources/FoundationEssentials/FileManager/FileOperations+Enumeration.swift
-@@ -169,7 +169,7 @@
-                 return
-             }
- 
--            state = [UnsafeMutablePointer(mutating: path), nil].withUnsafeBufferPointer { dirList in
-+            state = [UnsafeMutablePointer(mutating: path), unsafeBitCast(0, to: UnsafeMutablePointer<CChar>.self)].withUnsafeBufferPointer { dirList in
-                 guard let stream = fts_open(dirList.baseAddress!, opts, nil) else {
-                     return .error(errno, String(cString: path))
-                 }
 diff --git a/swift-foundation/Sources/FoundationEssentials/String/String+Path.swift b/swift-foundation/Sources/FoundationEssentials/String/String+Path.swift
 index f1cb26d..44600dd 100644
 --- a/swift-foundation/Sources/FoundationEssentials/String/String+Path.swift
 +++ b/swift-foundation/Sources/FoundationEssentials/String/String+Path.swift
-@@ -465,6 +465,7 @@ extension String {
+@@ -511,7 +511,7 @@ extension String {
              return envVar.standardizingPath
          }
          
-+        #if !canImport(Android)
+-        #if !os(WASI) // WASI does not have user concept
++        #if !os(WASI) && !canImport(Android) // WASI does not have user concept
          // Next, attempt to find the home directory via getpwnam/getpwuid
          var pass: UnsafeMutablePointer<passwd>?
          if let user {
-@@ -478,9 +479,10 @@ extension String {
-         if let dir = pass?.pointee.pw_dir {
-             return String(cString: dir).standardizingPath
-         }
-+        #endif
-         
+@@ -528,7 +528,7 @@ extension String {
+         #endif // !os(WASI)
+ 
          // Fallback to HOME for the current user if possible
 -        if user == nil, let home = getenv("HOME") {
 +        if let home = getenv("HOME") {
@@ -457,3 +421,91 @@ index fde8755..343f3b4 100644
  add_subdirectory(common)
  add_subdirectory(i18n)
  add_subdirectory(io)
+From ab001004196b249af359d6152e5c2d06c11bee56
+From: Alex Lorenz <arphaman@gmail.com>
+Date: Tue, 29 Oct 2024 13:00:11 -0700
+Subject: [PATCH] [android] fix the android build (#999)
+
+Platform.swift regressed after 71eefee7fca08ecbeacc89098b74ab80319baa6b
+---
+
+diff --git a/swift-foundation/Sources/FoundationEssentials/Platform.swift b/swift-foundation/Sources/FoundationEssentials/Platform.swift
+index d8b8fe6f..15a1362f 100644
+--- a/swift-foundation/Sources/FoundationEssentials/Platform.swift
++++ b/swift-foundation/Sources/FoundationEssentials/Platform.swift
+@@ -29,8 +29,7 @@ fileprivate let _pageSize: Int = {
+ // WebAssembly defines a fixed page size
+ fileprivate let _pageSize: Int = 65_536
+ #elseif os(Android)
+-import Bionic
+-import unistd
++import Android
+ fileprivate let _pageSize: Int = Int(getpagesize())
+ #elseif canImport(Glibc)
+ import Glibc
+@@ -142,7 +141,7 @@ extension Platform {
+     typealias Operation<Input, Output> = (Input, UnsafeMutablePointer<Output>, UnsafeMutablePointer<CChar>, Int, UnsafeMutablePointer<UnsafeMutablePointer<Output>?>) -> Int32
+     #endif
+     
+-    private static func withUserGroupBuffer<Input, Output, R>(_ input: Input, _ output: Output, sizeProperty: Int32, operation: Operation<Input, Output>, block: (Output) throws -> R) rethrows -> R? {
++    private static func withUserGroupBuffer<Input, Output, R>(_ input: Input, _ output: Output, sizeProperty: Int32, operation: Operation<Input, Output>, block: (Output) throws -> R?) rethrows -> R? {
+         var bufferLen = sysconf(sizeProperty)
+         if bufferLen == -1 {
+             bufferLen = 4096 // Generous default size estimate
+@@ -172,31 +171,51 @@ extension Platform {
+     
+     static func name(forUID uid: uid_t) -> String? {
+         withUserGroupBuffer(uid, passwd(), sizeProperty: Int32(_SC_GETPW_R_SIZE_MAX), operation: getpwuid_r) {
+-            String(cString: $0.pw_name)
++            // Android's pw_name `char *`` is nullable when it should be non-null.
++            // FIXME: avoid the coerce cast workaround once https://github.com/android/ndk/issues/2098 is fixed.
++            let pw_name: UnsafeMutablePointer<CChar>? = $0.pw_name
++            return pw_name.flatMap { String(cString: $0) }
+         }
+     }
+     
+     static func fullName(forUID uid: uid_t) -> String? {
+         withUserGroupBuffer(uid, passwd(), sizeProperty: Int32(_SC_GETPW_R_SIZE_MAX), operation: getpwuid_r) {
+-            String(cString: $0.pw_gecos)
++#if os(Android) && _pointerBitWidth(_32)
++            // pw_gecos isn't available on 32-bit Android.
++            let pw_gecos: UnsafeMutablePointer<CChar>? = nil
++#else
++            // Android's pw_gecos `char *`` is nullable, so always coerce to a nullable pointer
++            // in order to be compatible with Android.
++            let pw_gecos: UnsafeMutablePointer<CChar>? = $0.pw_gecos
++#endif
++            return pw_gecos.flatMap { String(cString: $0) }
+         }
+     }
+     
+     static func name(forGID gid: gid_t) -> String? {
+         withUserGroupBuffer(gid, group(), sizeProperty: Int32(_SC_GETGR_R_SIZE_MAX), operation: getgrgid_r) {
+-            String(cString: $0.gr_name)
++            // Android's gr_name `char *`` is nullable when it should be non-null.
++            // FIXME: avoid the coerce cast workaround once https://github.com/android/ndk/issues/2098 is fixed.
++            let gr_name: UnsafeMutablePointer<CChar>? = $0.gr_name
++            return gr_name.flatMap { String(cString: $0) }
+         }
+     }
+     
+     static func homeDirectory(forUserName userName: String) -> String? {
+         withUserGroupBuffer(userName, passwd(), sizeProperty: Int32(_SC_GETPW_R_SIZE_MAX), operation: getpwnam_r) {
+-            String(cString: $0.pw_dir)
++            // Android's pw_dir `char *`` is nullable when it should be non-null.
++            // FIXME: avoid the coerce cast workaround once https://github.com/android/ndk/issues/2098 is fixed.
++            let pw_dir: UnsafeMutablePointer<CChar>? = $0.pw_dir
++            return pw_dir.flatMap { String(cString: $0) }
+         }
+     }
+     
+     static func homeDirectory(forUID uid: uid_t) -> String? {
+         withUserGroupBuffer(uid, passwd(), sizeProperty: Int32(_SC_GETPW_R_SIZE_MAX), operation: getpwuid_r) {
+-            String(cString: $0.pw_dir)
++            // Android's pw_dir `char *`` is nullable when it should be non-null.
++            // FIXME: avoid the coerce cast workaround once https://github.com/android/ndk/issues/2098 is fixed.
++            let pw_dir: UnsafeMutablePointer<CChar>? = $0.pw_dir
++            return pw_dir.flatMap { String(cString: $0) }
+         }
+     }
+ }

@@ -2,9 +2,9 @@ TERMUX_PKG_HOMEPAGE=https://github.com/golang/tools
 TERMUX_PKG_DESCRIPTION="The official Go language server"
 TERMUX_PKG_LICENSE="BSD 3-Clause"
 TERMUX_PKG_MAINTAINER="@termux"
-TERMUX_PKG_VERSION="0.16.2"
+TERMUX_PKG_VERSION="0.17.1"
 TERMUX_PKG_SRCURL=https://github.com/golang/tools/archive/refs/tags/gopls/v${TERMUX_PKG_VERSION}.tar.gz
-TERMUX_PKG_SHA256=be68b3159fcb8cde9ebb8b468f67f03531c58be2de33edbac69e5599f2d4a2c1
+TERMUX_PKG_SHA256=5794ebd3302ef4fd08de284834b22810dbb17b7e08efeeaa9b96d5c94eb90d6d
 TERMUX_PKG_AUTO_UPDATE=true
 TERMUX_PKG_UPDATE_VERSION_REGEXP="\d+\.\d+\.\d+"
 

@@ -3,10 +3,10 @@ TERMUX_PKG_DESCRIPTION="Tools and libraries to manipulate a wide range of multim
 TERMUX_PKG_LICENSE="GPL-3.0"
 TERMUX_PKG_MAINTAINER="@termux"
 # Please align version with `ffplay` package.
-TERMUX_PKG_VERSION="6.1.2"
-TERMUX_PKG_REVISION=2
+TERMUX_PKG_VERSION="7.1"
+TERMUX_PKG_REVISION=1
 TERMUX_PKG_SRCURL=https://www.ffmpeg.org/releases/ffmpeg-${TERMUX_PKG_VERSION}.tar.xz
-TERMUX_PKG_SHA256=3b624649725ecdc565c903ca6643d41f33bd49239922e45c9b1442c63dca4e38
+TERMUX_PKG_SHA256=40973d44970dbc83ef302b0609f2e74982be2d85916dd2ee7472d30678a7abe6
 TERMUX_PKG_DEPENDS="fontconfig, freetype, fribidi, game-music-emu, harfbuzz, libaom, libandroid-glob, libass, libbluray, libbz2, libdav1d, libgnutls, libiconv, liblzma, libmp3lame, libopencore-amr, libopenmpt, libopus, librav1e, libsoxr, libsrt, libssh, libtheora, libv4l, libvidstab, libvmaf, libvo-amrwbenc, libvorbis, libvpx, libwebp, libx264, libx265, libxml2, libzimg, littlecms, ocl-icd, rubberband, svt-av1, xvidcore, zlib"
 TERMUX_PKG_BUILD_DEPENDS="opencl-headers"
 TERMUX_PKG_CONFLICTS="libav"
@@ -14,11 +14,28 @@ TERMUX_PKG_BREAKS="ffmpeg-dev"
 TERMUX_PKG_REPLACES="ffmpeg-dev"
 
 termux_step_pre_configure() {
+	declare -a _commits=(
+	099f88b8641dfc299f3896d17d9addc5b9ae7799
+	)
+
+	declare -a _checksums=(
+	df6250edd358bfba16d18f0e9a99324c7bba002ed96907062d91975c53dafbb8
+	)
+
+	for i in "${!_commits[@]}"; do
+		PATCHFILE="${TERMUX_PKG_CACHEDIR}/ffmpeg_patch_${_commits[i]}.patch"
+		termux_download \
+			"https://github.com/FFmpeg/FFmpeg/commit/${_commits[i]}.patch" \
+			"$PATCHFILE" \
+			"${_checksums[i]}"
+		patch -p1 -i "$PATCHFILE"
+	done
+
 	# Do not forget to bump revision of reverse dependencies and rebuild them
 	# after SOVERSION is changed. (These variables are also used afterwards.)
-	_FFMPEG_SOVER_avutil=58
-	_FFMPEG_SOVER_avcodec=60
-	_FFMPEG_SOVER_avformat=60
+	_FFMPEG_SOVER_avutil=59
+	_FFMPEG_SOVER_avcodec=61
+	_FFMPEG_SOVER_avformat=61
 
 	local f
 	for f in util codec format; do
@@ -26,7 +43,7 @@ termux_step_pre_configure() {
 				libav${f}/version.h libav${f}/version_major.h \
 				| sed -En 's/^libav'"${f}"'_VERSION_MAJOR=([0-9]+)$/\1/p')
 		if [ ! "${v}" ] || [ "$(eval echo \$_FFMPEG_SOVER_av${f})" != "${v}" ]; then
-			termux_error_exit "SOVERSION guard check failed for libav${f}.so."
+			termux_error_exit "SOVERSION guard check failed for libav${f}.so. expected ${v}"
 		fi
 	done
 }
