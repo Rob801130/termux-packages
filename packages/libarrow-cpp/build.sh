@@ -2,15 +2,14 @@ TERMUX_PKG_HOMEPAGE=https://github.com/apache/arrow
 TERMUX_PKG_DESCRIPTION="C++ libraries for Apache Arrow"
 TERMUX_PKG_LICENSE="Apache-2.0"
 TERMUX_PKG_MAINTAINER="@termux"
-# Align the version with `libarrow-python` package.
-TERMUX_PKG_VERSION=12.0.1
-TERMUX_PKG_REVISION=4
+# Align the version with `python-pyarrow` package.
+TERMUX_PKG_VERSION="18.1.0"
 TERMUX_PKG_SRCURL=https://github.com/apache/arrow/archive/refs/tags/apache-arrow-${TERMUX_PKG_VERSION}.tar.gz
-TERMUX_PKG_SHA256=f01b76a42ceb30409e7b1953ef64379297dd0c08502547cae6aaafd2c4a4d92e
+TERMUX_PKG_SHA256=026ecabd74f7b075f6c74e5448132ba40f35688a29d07616bcc1bd976676706c
 TERMUX_PKG_AUTO_UPDATE=true
 TERMUX_PKG_UPDATE_METHOD=repology
-TERMUX_PKG_DEPENDS="libandroid-execinfo, libc++, liblz4, libprotobuf, libre2, libsnappy, utf8proc, zlib, zstd"
-TERMUX_PKG_BUILD_DEPENDS="rapidjson"
+TERMUX_PKG_DEPENDS="abseil-cpp, apache-orc, libandroid-execinfo, libc++, liblz4, libprotobuf, libre2, libsnappy, thrift, utf8proc, zlib, zstd"
+TERMUX_PKG_BUILD_DEPENDS="boost, boost-headers, rapidjson"
 TERMUX_PKG_BREAKS="libarrow-python (<< ${TERMUX_PKG_VERSION})"
 TERMUX_PKG_EXTRA_CONFIGURE_ARGS="
 -DARROW_BUILD_STATIC=OFF
@@ -32,4 +31,7 @@ termux_step_pre_configure() {
 
 	CPPFLAGS+=" -DPROTOBUF_USE_DLLS"
 	LDFLAGS+=" -landroid-execinfo"
+
+	# Fix linker script error for zlib 1.3
+	LDFLAGS+=" -Wl,--undefined-version"
 }

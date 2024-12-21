@@ -3,28 +3,22 @@ TERMUX_PKG_DESCRIPTION="Python bindings for Apache Arrow"
 TERMUX_PKG_LICENSE="Apache-2.0"
 TERMUX_PKG_MAINTAINER="@termux"
 # Align the version with `libarrow-cpp` package.
-TERMUX_PKG_VERSION=12.0.1
+TERMUX_PKG_VERSION="18.1.0"
 TERMUX_PKG_SRCURL=https://github.com/apache/arrow/archive/refs/tags/apache-arrow-${TERMUX_PKG_VERSION}.tar.gz
-TERMUX_PKG_SHA256=f01b76a42ceb30409e7b1953ef64379297dd0c08502547cae6aaafd2c4a4d92e
+TERMUX_PKG_SHA256=026ecabd74f7b075f6c74e5448132ba40f35688a29d07616bcc1bd976676706c
 TERMUX_PKG_AUTO_UPDATE=true
 TERMUX_PKG_UPDATE_METHOD=repology
-TERMUX_PKG_DEPENDS="libarrow-cpp (>= ${TERMUX_PKG_VERSION}), libc++, python, python-numpy"
-TERMUX_PKG_PYTHON_COMMON_DEPS="Cython, numpy, wheel"
+TERMUX_PKG_DEPENDS="abseil-cpp, libarrow-cpp (>= ${TERMUX_PKG_VERSION}), libc++, python, python-numpy"
+TERMUX_PKG_PYTHON_COMMON_DEPS="build, Cython, numpy, setuptools, setuptools-scm, wheel"
 TERMUX_PKG_PROVIDES="libarrow-python"
-TERMUX_PKG_BUILD_IN_SRC=true
 
 termux_step_pre_configure() {
-	echo "Applying setup.py.diff"
-	sed -e "s|@VERSION@|${TERMUX_PKG_VERSION#*:}|g" \
-		$TERMUX_PKG_BUILDER_DIR/setup.py.diff \
-		| patch --silent -p1
-
 	TERMUX_PKG_SRCDIR+="/python"
 	TERMUX_PKG_BUILDDIR="$TERMUX_PKG_SRCDIR"
 
 	export PYARROW_CMAKE_OPTIONS="
 		-DCMAKE_PREFIX_PATH=$TERMUX_PREFIX/lib/cmake
-		-DNUMPY_INCLUDE_DIRS=$TERMUX_PYTHON_HOME/site-packages/numpy/core/include
+		-DNUMPY_INCLUDE_DIRS=$TERMUX_PYTHON_HOME/site-packages/numpy/_core/include
 		"
 	export PYARROW_WITH_DATASET=1
 	export PYARROW_WITH_HDFS=1
@@ -38,13 +32,12 @@ termux_step_configure() {
 	termux_setup_ninja
 }
 
-termux_step_make_install() {
-	pip install --no-deps --no-build-isolation . --prefix $TERMUX_PREFIX
+termux_step_make() {
+	PYTHONPATH='' python -m build -w -n -x "$TERMUX_PKG_SRCDIR"
 }
 
-termux_step_post_make_install() {
-	local f="$TERMUX_PYTHON_HOME/site-packages/pyarrow/_generated_version.py"
-	if [ ! -e "${f}" ]; then
-		echo "version = '${TERMUX_PKG_VERSION#*:}'" > "${f}"
-	fi
+termux_step_make_install() {
+	local _pyver="${TERMUX_PYTHON_VERSION//./}"
+	local _wheel="pyarrow-${TERMUX_PKG_VERSION}-cp${_pyver}-cp${_pyver}-linux_${TERMUX_ARCH}.whl"
+	pip install --no-deps --prefix="$TERMUX_PREFIX" "$TERMUX_PKG_SRCDIR/dist/${_wheel}"
 }

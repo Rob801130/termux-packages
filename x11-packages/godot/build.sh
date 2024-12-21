@@ -2,12 +2,14 @@ TERMUX_PKG_HOMEPAGE=https://godotengine.org
 TERMUX_PKG_DESCRIPTION="Advanced cross-platform 2D and 3D game engine"
 TERMUX_PKG_LICENSE="MIT"
 TERMUX_PKG_MAINTAINER="@termux"
-TERMUX_PKG_VERSION=4.1.2
+TERMUX_PKG_VERSION="4.3"
 TERMUX_PKG_SRCURL=https://github.com/godotengine/godot/archive/$TERMUX_PKG_VERSION-stable.tar.gz
-TERMUX_PKG_SHA256=790ff4f364f8421597a970f16041e86007f4c522bd427b3d7d14679026e58d40
+TERMUX_PKG_SHA256=6a441d02957432d76343052296dc514b1b6bd72af920c9f2518b1ec3cb534874
 TERMUX_PKG_DEPENDS="ca-certificates, glu, libandroid-execinfo, libc++, libenet, libogg, libtheora, libvorbis, libvpx, libwebp, libwslay, libxcursor, libxi, libxinerama, libxkbcommon, libxrandr, mbedtls, miniupnpc, opengl, opusfile, pcre2, speechd, zstd, fontconfig"
 TERMUX_PKG_BUILD_DEPENDS="pulseaudio, yasm"
 TERMUX_PKG_PYTHON_COMMON_DEPS="scons"
+TERMUX_PKG_AUTO_UPDATE=true
+TERMUX_PKG_UPDATE_VERSION_REGEXP='\d+\.\d+(\.\d+)?'
 TERMUX_PKG_BUILD_IN_SRC=true
 
 termux_step_make() {
@@ -27,7 +29,7 @@ termux_step_make() {
 	esac
 
 	export BUILD_NAME=termux
-	scons -j$TERMUX_MAKE_PROCESSES \
+	scons -j$TERMUX_PKG_MAKE_PROCESSES \
 		use_static_cpp=no \
 		colored=yes \
 		platform=linuxbsd \
@@ -43,9 +45,9 @@ termux_step_make() {
 		CXX="$(command -v $CXX)" \
 		OBJCOPY="$(command -v $OBJCOPY)" \
 		STRIP="$(command -v $STRIP)" \
-		CFLAGS="$CPPFLAGS $CFLAGS" \
-		CXXFLAGS="$CPPFLAGS $CXXFLAGS" \
-		LINKFLAGS="$LDFLAGS" \
+		cflags="$CPPFLAGS $CFLAGS" \
+		cxxflags="$CPPFLAGS $CXXFLAGS" \
+		linkflags="$LDFLAGS -landroid-execinfo" \
 		CPPPATH="$TERMUX_PREFIX/include" \
 		LIBPATH="$TERMUX_PREFIX/lib" \
 		$system_libs \
