@@ -101,7 +101,7 @@ termux_step_start_build() {
 			termux_download \
 				"https://github.com/termux/termux-elf-cleaner/releases/download/v${TERMUX_ELF_CLEANER_VERSION}/termux-elf-cleaner" \
 				"$TERMUX_ELF_CLEANER" \
-				7c29143b9cffb3a9a580f39a7966b2bb36c5fc099da6f4c98dcdedacb14f08a2
+				59645fb25b84d11f108436e83d9df5e874ba4eb76ab62948869a23a3ee692fa7
 			chmod u+x "$TERMUX_ELF_CLEANER"
 		fi
 

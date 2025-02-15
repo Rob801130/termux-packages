@@ -1,11 +1,11 @@
-TERMUX_PKG_HOMEPAGE=https://picolisp.com/wiki/?home
+TERMUX_PKG_HOMEPAGE="https://picolisp.com/wiki/?home"
 TERMUX_PKG_DESCRIPTION="Lisp interpreter and application server framework"
 TERMUX_PKG_LICENSE="MIT"
 TERMUX_PKG_LICENSE_FILE="COPYING"
 TERMUX_PKG_MAINTAINER="@termux"
-TERMUX_PKG_VERSION="23.9"
-TERMUX_PKG_SRCURL=https://deb.debian.org/debian/pool/main/p/picolisp/picolisp_${TERMUX_PKG_VERSION}.orig.tar.gz
-TERMUX_PKG_SHA256=4f0913127c898376fcd355ddbfadda13f274cdc4c07340e4951e58be77752cb0
+TERMUX_PKG_VERSION="24.12"
+TERMUX_PKG_SRCURL=https://software-lab.de/picoLisp-${TERMUX_PKG_VERSION}.tgz
+TERMUX_PKG_SHA256=99fe187996e323ced5b9a6f3df789263fb0992abcb96dc0e06fa5ea81f4d3fd4
 TERMUX_PKG_AUTO_UPDATE=true
 TERMUX_PKG_DEPENDS="libcrypt, libffi, openssl, readline"
 TERMUX_PKG_BUILD_IN_SRC=true

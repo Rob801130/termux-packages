@@ -2,13 +2,14 @@ TERMUX_PKG_HOMEPAGE=https://plantuml.com/
 TERMUX_PKG_DESCRIPTION="Draws UML diagrams, using a simple and human readable text description"
 TERMUX_PKG_LICENSE="GPL-3.0"
 TERMUX_PKG_MAINTAINER="@termux"
-TERMUX_PKG_VERSION="1.2023.12"
+TERMUX_PKG_VERSION="1.2025.0"
 TERMUX_PKG_SRCURL=https://github.com/plantuml/plantuml/archive/refs/tags/v${TERMUX_PKG_VERSION}.tar.gz
-TERMUX_PKG_SHA256=67880e74ff80dab6427ef5e4f3adec3ed87878411599cd96aff2884ae280bb97
+TERMUX_PKG_SHA256=4430ab69c296ff7cf0656f206b769f3d7cddca599cb69011fc20438ce5bb613a
 TERMUX_PKG_AUTO_UPDATE=true
 TERMUX_PKG_DEPENDS="openjdk-17"
 TERMUX_PKG_PLATFORM_INDEPENDENT=true
 TERMUX_PKG_BUILD_IN_SRC=true
+TERMUX_PKG_UPDATE_VERSION_REGEXP="\d+\.\d+\.\d+"
 
 termux_step_make() {
 	$TERMUX_PKG_SRCDIR/gradlew --no-daemon --parallel --stacktrace assemble

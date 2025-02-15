@@ -2,12 +2,11 @@ TERMUX_PKG_HOMEPAGE=https://github.com/cloudflare/cloudflared
 TERMUX_PKG_DESCRIPTION="A tunneling daemon that proxies traffic from the Cloudflare network to your origins"
 TERMUX_PKG_LICENSE="Apache-2.0"
 TERMUX_PKG_MAINTAINER="@termux"
-TERMUX_PKG_VERSION="2023.8.2"
+TERMUX_PKG_VERSION="2025.2.0"
 TERMUX_PKG_SRCURL=https://github.com/cloudflare/cloudflared/archive/refs/tags/${TERMUX_PKG_VERSION}.tar.gz
-TERMUX_PKG_SHA256=ffc3c07263b5a44121781d8b711e57d6414ef8de3da991849762df87618a27f8
+TERMUX_PKG_SHA256=54de1e3bfb3ebcddd8bdc70837b6e91cdd2221673117356c022d0ca3376dcca4
 TERMUX_PKG_AUTO_UPDATE=true
 TERMUX_PKG_BUILD_IN_SRC=true
-TERMUX_PKG_GO_USE_OLDER=true
 
 termux_step_make() {
 	termux_setup_golang
@@ -18,5 +17,5 @@ termux_step_make() {
 }
 
 termux_step_make_install() {
-	install -Dm700 -t $TERMUX_PREFIX/bin cloudflared
+	install -Dm700 -t "$TERMUX_PREFIX"/bin cloudflared
 }
