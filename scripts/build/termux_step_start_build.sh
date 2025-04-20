@@ -10,7 +10,7 @@ termux_step_start_build() {
 		TERMUX_PKG_PLATFORM_INDEPENDENT=true
 	fi
 
-	if [ -n "${TERMUX_PKG_BLACKLISTED_ARCHES:=""}" ] && [ "$TERMUX_PKG_BLACKLISTED_ARCHES" != "${TERMUX_PKG_BLACKLISTED_ARCHES/$TERMUX_ARCH/}" ]; then
+	if [ -n "${TERMUX_PKG_EXCLUDED_ARCHES:=""}" ] && [ "$TERMUX_PKG_EXCLUDED_ARCHES" != "${TERMUX_PKG_EXCLUDED_ARCHES/$TERMUX_ARCH/}" ]; then
 		echo "Skipping building $TERMUX_PKG_NAME for arch $TERMUX_ARCH"
 		exit 0
 	fi
@@ -68,8 +68,8 @@ termux_step_start_build() {
 	# Avoid exporting PKG_CONFIG_LIBDIR until after termux_step_host_build.
 	export TERMUX_PKG_CONFIG_LIBDIR=$TERMUX_PREFIX/lib/pkgconfig:$TERMUX_PREFIX/share/pkgconfig
 
+	local TERMUX_PKG_BUILDDIR_ORIG="$TERMUX_PKG_BUILDDIR"
 	if [ "$TERMUX_PKG_BUILD_IN_SRC" = "true" ]; then
-		echo "Building in src due to TERMUX_PKG_BUILD_IN_SRC being set to true" > "$TERMUX_PKG_BUILDDIR/BUILDING_IN_SRC.txt"
 		TERMUX_PKG_BUILDDIR=$TERMUX_PKG_SRCDIR
 	fi
 
@@ -79,6 +79,10 @@ termux_step_start_build() {
 			termux_error_exit "Cannot continue this build, hostbuilt tools are missing"
 		fi
 
+		# Set TERMUX_ELF_CLEANER for on-device continued build
+		if [ "$TERMUX_PACKAGE_LIBRARY" = "bionic" ] && [ "$TERMUX_ON_DEVICE_BUILD" = "true" ]; then
+			TERMUX_ELF_CLEANER="$(command -v termux-elf-cleaner)"
+		fi
 		# The rest in this function can be skipped when doing
 		# a continued build
 		return
@@ -86,6 +90,14 @@ termux_step_start_build() {
 
 	if [ "$TERMUX_ON_DEVICE_BUILD" = "true" ] && [ "$TERMUX_PKG_ON_DEVICE_BUILD_NOT_SUPPORTED" = "true" ]; then
 		termux_error_exit "Package '$TERMUX_PKG_NAME' is not available for on-device builds."
+	fi
+
+	# Delete and re-create the directories used for building the package
+	termux_step_setup_build_folders
+
+	if [ "$TERMUX_PKG_BUILD_IN_SRC" = "true" ]; then
+		# Create a file for users to know that the build directory not containing any built files is expected behaviour
+		echo "Building in src due to TERMUX_PKG_BUILD_IN_SRC being set to true" > "$TERMUX_PKG_BUILDDIR_ORIG/BUILDING_IN_SRC.txt"
 	fi
 
 	if [ "$TERMUX_PACKAGE_LIBRARY" = "bionic" ]; then
@@ -101,7 +113,7 @@ termux_step_start_build() {
 			termux_download \
 				"https://github.com/termux/termux-elf-cleaner/releases/download/v${TERMUX_ELF_CLEANER_VERSION}/termux-elf-cleaner" \
 				"$TERMUX_ELF_CLEANER" \
-				7c29143b9cffb3a9a580f39a7966b2bb36c5fc099da6f4c98dcdedacb14f08a2
+				59645fb25b84d11f108436e83d9df5e874ba4eb76ab62948869a23a3ee692fa7
 			chmod u+x "$TERMUX_ELF_CLEANER"
 		fi
 

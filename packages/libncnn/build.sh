@@ -4,15 +4,17 @@ TERMUX_PKG_LICENSE="BSD 3-Clause"
 TERMUX_PKG_MAINTAINER="@termux"
 _COMMIT=4b97730b0d033b4dc2a790e5c35745e0dbf51569
 TERMUX_PKG_VERSION="20230627"
-TERMUX_PKG_REVISION=1
+TERMUX_PKG_REVISION=9
 TERMUX_PKG_SRCURL=git+https://github.com/Tencent/ncnn
 TERMUX_PKG_GIT_BRANCH=master
 TERMUX_PKG_SHA256=a81ee5b6df97830919f8ed8554c99a4f223976ed82eee0cc9f214de0ce53dd2a
+TERMUX_PKG_AUTO_UPDATE=false
 TERMUX_PKG_DEPENDS="abseil-cpp, glslang, libc++, vulkan-loader"
 TERMUX_PKG_BUILD_DEPENDS="protobuf-static, python, vulkan-headers, vulkan-loader-android"
 TERMUX_PKG_PYTHON_COMMON_DEPS="wheel, pybind11"
 TERMUX_PKG_BUILD_IN_SRC=true
 TERMUX_PKG_EXTRA_CONFIGURE_ARGS="
+-DNCNN_AVX=OFF
 -DNCNN_BUILD_BENCHMARK=OFF
 -DNCNN_BUILD_EXAMPLES=OFF
 -DNCNN_BUILD_TESTS=OFF
@@ -58,12 +60,20 @@ termux_step_pre_configure() {
 	termux_setup_ninja
 	termux_setup_protobuf
 
-	CXXFLAGS+=" -std=c++14"
+	CXXFLAGS+=" -std=c++17"
+	LDFLAGS+=" -fopenmp -static-openmp"
 	LDFLAGS+=" $("${TERMUX_SCRIPTDIR}/packages/libprotobuf/interface_link_libraries.sh")"
 	LDFLAGS+=" -lutf8_range -lutf8_validity"
 	LDFLAGS+=" -landroid -ljnigraphics -llog"
 
-	mv -v "${TERMUX_PREFIX}"/lib/libprotobuf.so{,.tmp}
+	mkdir -p "$TERMUX_PKG_TMPDIR/bin"
+	cat <<- EOF > "$TERMUX_PKG_TMPDIR/bin/$(basename ${CC})"
+		#!/bin/bash
+		set -- "\${@/-lprotobuf/-l:libprotobuf.a}"
+		exec $TERMUX_STANDALONE_TOOLCHAIN/bin/$(basename ${CC}) "\$@"
+	EOF
+	chmod +x "$TERMUX_PKG_TMPDIR/bin/$(basename ${CC})"
+	export PATH="$TERMUX_PKG_TMPDIR/bin:$PATH"
 }
 
 termux_step_post_make_install() {
@@ -80,8 +90,6 @@ termux_step_post_make_install() {
 	pushd python
 	pip install --no-deps . --prefix "${TERMUX_PREFIX}"
 	popd
-
-	mv -v "${TERMUX_PREFIX}"/lib/libprotobuf.so{.tmp,}
 
 	return
 
@@ -129,8 +137,4 @@ termux_step_post_make_install() {
 			*) install -v -Dm755 "${test}" -t "${tools_dir}/tests" ;;
 		esac
 	done
-}
-
-termux_step_post_massage() {
-	rm -f lib/libprotobuf.so
 }
