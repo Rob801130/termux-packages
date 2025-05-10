@@ -1,6 +1,6 @@
 termux_setup_meson() {
 	termux_setup_ninja
-	local MESON_VERSION=1.2.2
+	local MESON_VERSION=1.7.2
 	local MESON_FOLDER
 
 	if [ "${TERMUX_PACKAGES_OFFLINE-false}" = "true" ]; then
@@ -16,7 +16,7 @@ termux_setup_meson() {
 		termux_download \
 			"https://github.com/mesonbuild/meson/releases/download/$MESON_VERSION/meson-$MESON_VERSION.tar.gz" \
 			"$MESON_TAR_FILE" \
-			4a0f04de331fbc7af3b802a844fc8838f4ccd1ded1e792ba4f8f2faf8c5fe4d6
+			4d40d63aa748a9c139cc41ab9bffe43edd113c5639d78bde81544ca955aea890
 		tar xf "$MESON_TAR_FILE" -C "$TERMUX_PKG_TMPDIR"
 		shopt -s nullglob
 		local f
@@ -27,7 +27,10 @@ termux_setup_meson() {
 		shopt -u nullglob
 		mv "$MESON_TMP_FOLDER" "$MESON_FOLDER"
 	fi
-	TERMUX_MESON="$MESON_FOLDER/meson.py"
+	TERMUX_MESON="${MESON_FOLDER}/meson.py"
+	if [ "$TERMUX_ON_DEVICE_BUILD" = "false" ] && [ "$TERMUX_PACKAGE_LIBRARY" = "glibc" ]; then
+		TERMUX_MESON="/usr/bin/python${TERMUX_PYTHON_VERSION} ${TERMUX_MESON}"
+	fi
 	TERMUX_MESON_CROSSFILE=$TERMUX_PKG_TMPDIR/meson-crossfile-$TERMUX_ARCH.txt
 	local MESON_CPU MESON_CPU_FAMILY
 	if [ "$TERMUX_ARCH" = "arm" ]; then
@@ -46,19 +49,20 @@ termux_setup_meson() {
 		termux_error_exit "Unsupported arch: $TERMUX_ARCH"
 	fi
 
-	local CONTENT=""
 	echo "[binaries]" > $TERMUX_MESON_CROSSFILE
 	echo "ar = '$AR'" >> $TERMUX_MESON_CROSSFILE
 	echo "c = '$CC'" >> $TERMUX_MESON_CROSSFILE
 	echo "cmake = 'cmake'" >> $TERMUX_MESON_CROSSFILE
 	echo "cpp = '$CXX'" >> $TERMUX_MESON_CROSSFILE
 	echo "ld = '$LD'" >> $TERMUX_MESON_CROSSFILE
-	echo "pkgconfig = '$PKG_CONFIG'" >> $TERMUX_MESON_CROSSFILE
+	echo "pkg-config = '$PKG_CONFIG'" >> $TERMUX_MESON_CROSSFILE
 	echo "strip = '$STRIP'" >> $TERMUX_MESON_CROSSFILE
 
-	echo '' >> $TERMUX_MESON_CROSSFILE
-	echo "[properties]" >> $TERMUX_MESON_CROSSFILE
-	echo "needs_exe_wrapper = true" >> $TERMUX_MESON_CROSSFILE
+	if [ "$TERMUX_PACKAGE_LIBRARY" = "bionic" ]; then
+		echo '' >> $TERMUX_MESON_CROSSFILE
+		echo "[properties]" >> $TERMUX_MESON_CROSSFILE
+		echo "needs_exe_wrapper = true" >> $TERMUX_MESON_CROSSFILE
+  	fi
 
 	echo '' >> $TERMUX_MESON_CROSSFILE
 	echo "[built-in options]" >> $TERMUX_MESON_CROSSFILE
@@ -88,7 +92,7 @@ termux_setup_meson() {
 	echo ']' >> $TERMUX_MESON_CROSSFILE
 
 	local property
-	for property in c_link_args cpp_link_args; do
+	for property in c_link_args cpp_link_args fortran_link_args; do
 		echo -n "$property = [" >> $TERMUX_MESON_CROSSFILE
 		first=true
 		for word in $LDFLAGS; do

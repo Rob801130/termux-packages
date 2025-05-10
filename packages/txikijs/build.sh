@@ -20,7 +20,7 @@ TERMUX_PKG_HOSTBUILD=true
 #   '__alignof(long long) == 8' "non-wasi data layout"
 #   _Static_assert(_Alignof(int64_t) == 8, "non-wasi data layout");
 #   ^              ~~~~~~~~~~~~~~~~~~~~~~
-TERMUX_PKG_BLACKLISTED_ARCHES="i686"
+TERMUX_PKG_EXCLUDED_ARCHES="i686"
 
 termux_step_host_build() {
 	find $TERMUX_PKG_SRCDIR -mindepth 1 -maxdepth 1 ! -name '.git*' \
@@ -29,7 +29,7 @@ termux_step_host_build() {
 	termux_setup_cmake
 
 	cmake .
-	make -j $TERMUX_MAKE_PROCESSES
+	make -j $TERMUX_PKG_MAKE_PROCESSES
 }
 
 termux_step_post_configure() {
