@@ -3,17 +3,19 @@ TERMUX_PKG_DESCRIPTION="An open-source implementation of the OpenGL specificatio
 TERMUX_PKG_LICENSE="MIT"
 TERMUX_PKG_LICENSE_FILE="docs/license.rst"
 TERMUX_PKG_MAINTAINER="@termux"
-TERMUX_PKG_VERSION="25.0.4"
-_LLVM_MAJOR_VERSION=$(. $TERMUX_SCRIPTDIR/packages/libllvm/build.sh; echo $LLVM_MAJOR_VERSION)
+TERMUX_PKG_VERSION="25.1.0"
+TERMUX_PKG_REVISION=1
+_LLVM_MAJOR_VERSION=$(. $TERMUX_SCRIPTDIR/packages/libllvm/build.sh; echo "${LLVM_MAJOR_VERSION}")
 _LLVM_MAJOR_VERSION_NEXT=$((_LLVM_MAJOR_VERSION + 1))
 TERMUX_PKG_SRCURL=https://archive.mesa3d.org/mesa-${TERMUX_PKG_VERSION}.tar.xz
-TERMUX_PKG_SHA256=76293cf4372ca4e4e73fd6c36c567b917b608a4db9d11bd2e33068199a7df04d
+TERMUX_PKG_SHA256=b1c45888969ee5df997e2542654f735ab1b772924b442f3016d2293414c99c14
 TERMUX_PKG_AUTO_UPDATE=true
 TERMUX_PKG_DEPENDS="libandroid-shmem, libc++, libdrm, libglvnd, libllvm (<< ${_LLVM_MAJOR_VERSION_NEXT}), libwayland, libx11, libxext, libxfixes, libxshmfence, libxxf86vm, ncurses, vulkan-loader, zlib, zstd"
 TERMUX_PKG_SUGGESTS="mesa-dev"
 TERMUX_PKG_BUILD_DEPENDS="libwayland-protocols, libxrandr, llvm, llvm-tools, mlir, xorgproto"
-TERMUX_PKG_CONFLICTS="libmesa, ndk-sysroot (<= 25b)"
-TERMUX_PKG_REPLACES="libmesa"
+TERMUX_PKG_BREAKS="osmesa, osmesa-demos"
+TERMUX_PKG_CONFLICTS="libmesa, ndk-sysroot (<= 25b), osmesa"
+TERMUX_PKG_REPLACES="libmesa, osmesa"
 
 # FIXME: Set `shared-llvm` to disabled if possible
 TERMUX_PKG_EXTRA_CONFIGURE_ARGS="
@@ -29,11 +31,15 @@ TERMUX_PKG_EXTRA_CONFIGURE_ARGS="
 -Dllvm=enabled
 -Dshared-llvm=enabled
 -Dplatforms=x11,wayland
--Dgallium-drivers=swrast,virgl,zink
--Dosmesa=true
+-Dgallium-drivers=llvmpipe,softpipe,virgl,zink
 -Dglvnd=enabled
 -Dxmlconfig=disabled
 "
+
+termux_pkg_auto_update() {
+	read -r latest < <(curl -fsSL "https://archive.mesa3d.org/" | sed -rn 's/.*mesa-([0-9]+(\.[0-9]+)*).*/\1/p' | sort -Vr);
+	termux_pkg_upgrade_version "${latest}"
+}
 
 termux_step_post_get_source() {
 	# Do not use meson wrap projects

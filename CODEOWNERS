@@ -1,11 +1,19 @@
 # Default assignment: frequent contributors from @termux.
 * @Grimler91 @TomJo2000
 
+# GitHub Actions & other stuff
+/.github @thunder-coding
+
+# Documentation for contributors
+/CONTRIBUTING.md @thunder-coding
+/README.md @thunder-coding
+
 # Build system.
 /build-all.sh @Grimler91
-/build-package.sh @Grimler91
-/clean.sh @Grimler91
-/scripts/ @Grimler91
+/build-package.sh @Grimler91 @thunder-coding
+/clean.sh @Grimler91 @thunder-coding
+/scripts/ @Grimler91 @thunder-coding
+/repo.json @Grimler91 @thunder-coding
 
 # GN setup script
 /scripts/build/setup/termux_setup_gn.sh @thunder-coding
@@ -251,6 +259,8 @@
 /x11-packages/carbonyl-host-tools/ @licy183
 /x11-packages/chromium/ @licy183
 /x11-packages/chromium-host-tools/ @licy183
+/x11-packages/electron-for-code-oss @licy183
+/x11-packages/electron-host-tools-for-code-oss @licy183
 /x11-packages/otter-browser/ @licy183
 /x11-packages/qt5-qtwebengine/ @licy183
 

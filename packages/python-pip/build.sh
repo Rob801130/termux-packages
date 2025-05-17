@@ -2,10 +2,10 @@ TERMUX_PKG_HOMEPAGE=https://pip.pypa.io/
 TERMUX_PKG_DESCRIPTION="The PyPA recommended tool for installing Python packages"
 TERMUX_PKG_LICENSE="MIT"
 TERMUX_PKG_MAINTAINER="@termux"
-TERMUX_PKG_VERSION="25.0.1"
+TERMUX_PKG_VERSION="25.1.1"
 TERMUX_PKG_REVISION=1
 TERMUX_PKG_SRCURL=https://github.com/pypa/pip/archive/$TERMUX_PKG_VERSION.tar.gz
-TERMUX_PKG_SHA256=334371888f0c679c04e819ddc234562feaea81331658a76842b62dc9dc83a832
+TERMUX_PKG_SHA256=b25615caeef66bb5049a44e6df257ebae2fcc9dc774d5369a338db29b7f53f1c
 TERMUX_PKG_AUTO_UPDATE=true
 TERMUX_PKG_UPDATE_TAG_TYPE="newest-tag"
 TERMUX_PKG_UPDATE_VERSION_REGEXP='^\d+\.\d+(\.\d+)?$'
@@ -34,7 +34,7 @@ termux_step_post_make_install() {
 	( # creating pip documentation
 		cd docs/
 		python pip_sphinxext.py
-		sphinx-build -b man -d build/doctrees/man man build/man -c html
+		sphinx-build -b man -d build/doctrees/man man build/man -c html --tag man
 	)
 
 	install -vDm 644 LICENSE.txt -t "$TERMUX_PREFIX/share/licenses/python-pip/"
