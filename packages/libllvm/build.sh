@@ -3,9 +3,10 @@ TERMUX_PKG_DESCRIPTION="Modular compiler and toolchain technologies library"
 TERMUX_PKG_LICENSE="Apache-2.0, NCSA"
 TERMUX_PKG_LICENSE_FILE="llvm/LICENSE.TXT"
 TERMUX_PKG_MAINTAINER="@finagolfin"
-LLVM_MAJOR_VERSION=17
-TERMUX_PKG_VERSION=${LLVM_MAJOR_VERSION}.0.3
-TERMUX_PKG_SHA256=be5a1e44d64f306bb44fce7d36e3b3993694e8e6122b2348608906283c176db8
+# Keep flang version and revision in sync when updating (enforced by check in termux_step_pre_configure).
+LLVM_MAJOR_VERSION=20
+TERMUX_PKG_VERSION=${LLVM_MAJOR_VERSION}.1.4
+TERMUX_PKG_SHA256=a95365b02536ed4aef29b325c205dd89c268cba41503ab2fc05f81418613ab63
 TERMUX_PKG_AUTO_UPDATE=false
 TERMUX_PKG_SRCURL=https://github.com/llvm/llvm-project/releases/download/llvmorg-$TERMUX_PKG_VERSION/llvm-project-${TERMUX_PKG_VERSION}.src.tar.xz
 TERMUX_PKG_HOSTBUILD=true
@@ -23,12 +24,16 @@ TERMUX_PKG_CONFLICTS="gcc, clang (<< 3.9.1-3)"
 TERMUX_PKG_BREAKS="libclang, libclang-dev, libllvm-dev"
 TERMUX_PKG_REPLACES="gcc, libclang, libclang-dev, libllvm-dev"
 TERMUX_PKG_GROUPS="base-devel"
+LLVM_PROJECTS="clang;clang-tools-extra;compiler-rt;lld;mlir;openmp;polly"
+if [ $TERMUX_ARCH = "aarch64" ] || [ $TERMUX_ARCH = "x86_64" ]; then
+	LLVM_PROJECTS+=";lldb"
+fi
 # See http://llvm.org/docs/CMake.html:
 TERMUX_PKG_EXTRA_CONFIGURE_ARGS="
 -DANDROID_PLATFORM_LEVEL=$TERMUX_PKG_API_LEVEL
 -DPYTHON_EXECUTABLE=$(command -v python${TERMUX_PYTHON_VERSION})
 -DLLVM_ENABLE_PIC=ON
--DLLVM_ENABLE_PROJECTS=clang;clang-tools-extra;compiler-rt;lld;lldb;mlir;openmp;polly
+-DLLVM_ENABLE_PROJECTS=$LLVM_PROJECTS
 -DLLVM_ENABLE_LIBEDIT=OFF
 -DLLVM_INCLUDE_TESTS=OFF
 -DCLANG_DEFAULT_CXX_STDLIB=libc++
@@ -75,11 +80,18 @@ termux_step_host_build() {
 
 	cmake -G Ninja -DCMAKE_BUILD_TYPE=Release \
 		-DLLVM_ENABLE_PROJECTS='clang;clang-tools-extra;lldb;mlir' $TERMUX_PKG_SRCDIR/llvm
-	ninja -j $TERMUX_MAKE_PROCESSES clang-tblgen clang-pseudo-gen \
-		clang-tidy-confusable-chars-gen lldb-tblgen llvm-tblgen mlir-tblgen mlir-linalg-ods-yaml-gen
+	ninja -j $TERMUX_PKG_MAKE_PROCESSES clang-tblgen clang-tidy-confusable-chars-gen \
+		lldb-tblgen llvm-tblgen mlir-tblgen mlir-linalg-ods-yaml-gen
 }
 
 termux_step_pre_configure() {
+	# Version guard to keep flang in sync
+	local flang_version=$(. $TERMUX_SCRIPTDIR/packages/flang/build.sh; echo ${TERMUX_PKG_VERSION})
+	local flang_revision=$(TERMUX_PKG_REVISION=0; . $TERMUX_SCRIPTDIR/packages/flang/build.sh; echo ${TERMUX_PKG_REVISION})
+	if [ "${flang_version}" != "${TERMUX_PKG_VERSION}" ] || [ "${flang_revision}" != "${TERMUX_PKG_REVISION}" ]; then
+		termux_error_exit "Version mismatch between libllvm and flang. libllvm=$TERMUX_PKG_VERSION:$TERMUX_PKG_REVISION, flang=$flang_version:$flang_revision"
+	fi
+
 	# Add unknown vendor, otherwise it screws with the default LLVM triple
 	# detection.
 	export LLVM_DEFAULT_TARGET_TRIPLE=${CCTERMUX_HOST_PLATFORM/-/-unknown-}
@@ -106,9 +118,9 @@ termux_step_post_configure() {
 
 termux_step_post_make_install() {
 	if [ "$TERMUX_CMAKE_BUILD" = Ninja ]; then
-		ninja -j $TERMUX_MAKE_PROCESSES docs-{llvm,clang}-man
+		ninja -j $TERMUX_PKG_MAKE_PROCESSES docs-{llvm,clang}-man
 	else
-		make -j $TERMUX_MAKE_PROCESSES docs-{llvm,clang}-man
+		make -j $TERMUX_PKG_MAKE_PROCESSES docs-{llvm,clang}-man
 	fi
 
 	cp docs/man/* $TERMUX_PREFIX/share/man/man1
@@ -120,6 +132,7 @@ termux_step_post_make_install() {
 	done
 
 	ln -f -s clang++ clang++-${LLVM_MAJOR_VERSION}
+	ln -f -s ${LLVM_MAJOR_VERSION} $TERMUX_PREFIX/lib/clang/latest
 
 	if [ $TERMUX_ARCH == "arm" ]; then
 		# For arm we replace symlinks with the same type of
@@ -151,4 +164,9 @@ termux_step_post_make_install() {
 			chmod u+x $tool
 		done
 	fi
+}
+
+termux_step_pre_massage() {
+	[[ "$TERMUX_PACKAGE_FORMAT" != "pacman" ]] && return
+	sed -i "s|@LLVM_MAJOR_VERSION@|${LLVM_MAJOR_VERSION}|g" ./share/libalpm/scripts/update-libcompiler-rt
 }

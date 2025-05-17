@@ -14,7 +14,7 @@ TERMUX_PKG_DEPENDS="binutils-is-llvm | binutils, libedit"
 TERMUX_PKG_BUILD_IN_SRC=true
 
 # Need nasm.
-TERMUX_PKG_BLACKLISTED_ARCHES="i686, x86_64"
+TERMUX_PKG_EXCLUDED_ARCHES="i686, x86_64"
 
 termux_step_post_get_source() {
 	git fetch --unshallow
@@ -48,7 +48,7 @@ termux_step_make() {
 		_ARCH=$TERMUX_ARCH
 	fi
 
-	make ARCH=$_ARCH CC="$CC $CPPFLAGS $CFLAGS" LDFLAGS="$LDFLAGS" -j $TERMUX_MAKE_PROCESSES
+	make ARCH=$_ARCH CC="$CC $CPPFLAGS $CFLAGS" LDFLAGS="$LDFLAGS" -j $TERMUX_PKG_MAKE_PROCESSES
 }
 
 termux_step_make_install() {
