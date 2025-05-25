@@ -2,14 +2,13 @@ TERMUX_PKG_HOMEPAGE=https://developer.gnome.org/glib/
 TERMUX_PKG_DESCRIPTION="Library providing core building blocks for libraries and applications written in C"
 TERMUX_PKG_LICENSE="LGPL-2.1"
 TERMUX_PKG_MAINTAINER="@termux"
-TERMUX_PKG_VERSION="2.84.1"
-TERMUX_PKG_REVISION=1
+TERMUX_PKG_VERSION="2.84.2"
 TERMUX_PKG_SRCURL=https://download.gnome.org/sources/glib/${TERMUX_PKG_VERSION%.*}/glib-${TERMUX_PKG_VERSION}.tar.xz
-TERMUX_PKG_SHA256=2b4bc2ec49611a5fc35f86aca855f2ed0196e69e53092bab6bb73396bf30789a
+TERMUX_PKG_SHA256=88e960dd937057407d61fcb3b45a860704b25923c37ae2478b85f2ecb5a4021f
 TERMUX_PKG_AUTO_UPDATE=true
-TERMUX_PKG_DEPENDS="libandroid-support, libffi, libiconv, pcre2, resolv-conf, zlib"
-TERMUX_PKG_BREAKS="glib-dev"
-TERMUX_PKG_REPLACES="glib-dev"
+TERMUX_PKG_DEPENDS="libandroid-support, libffi, libiconv, pcre2, resolv-conf, zlib, python"
+TERMUX_PKG_BREAKS="glib-dev, glib-bin"
+TERMUX_PKG_REPLACES="glib-dev, glib-bin"
 TERMUX_PKG_VERSIONED_GIR=false
 TERMUX_PKG_DISABLE_GIR=false
 TERMUX_PKG_EXTRA_CONFIGURE_ARGS="
@@ -65,6 +64,10 @@ termux_step_host_build() {
 }
 
 termux_step_pre_configure() {
+	# always remove this marker because glib-cross' files are installed during termux_step_host_build(),
+	# so the command scripts/run-docker.sh ./build-package.sh -a all gtk3 (without -I, with -a all)
+	# would otherwise have .../files/usr/bin/glib-compile-resources: Exec format error
+	rm -rf $TERMUX_HOSTBUILD_MARKER
 	# glib checks for __BIONIC__ instead of __ANDROID__:
 	CFLAGS+=" -D__BIONIC__=1"
 	_PREFIX="$TERMUX_PKG_TMPDIR/prefix"
@@ -162,12 +165,15 @@ termux_step_post_massage() {
 }
 
 termux_step_create_debscripts() {
-	for i in $(test "$TERMUX_PACKAGE_FORMAT" != "pacman" && echo postinst) postrm triggers; do
+	for i in postinst prerm triggers; do
 		sed \
 			"s|@TERMUX_PREFIX@|${TERMUX_PREFIX}|g" \
 			"${TERMUX_PKG_BUILDER_DIR}/hooks/${i}.in" > ./${i}
 		chmod 755 ./${i}
 	done
 	unset i
+	if [[ "$TERMUX_PACKAGE_FORMAT" == "pacman" ]]; then
+		echo "post_install" > postupg
+	fi
 	chmod 644 ./triggers
 }

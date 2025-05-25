@@ -336,8 +336,8 @@ source "$TERMUX_SCRIPTDIR/scripts/build/termux_step_install_service_scripts.sh"
 source "$TERMUX_SCRIPTDIR/scripts/build/termux_step_install_license.sh"
 
 # Function to cp (through tar) installed files to massage dir
-# shellcheck source=scripts/build/termux_step_extract_into_massagedir.sh
-source "$TERMUX_SCRIPTDIR/scripts/build/termux_step_extract_into_massagedir.sh"
+# shellcheck source=scripts/build/termux_step_copy_into_massagedir.sh
+source "$TERMUX_SCRIPTDIR/scripts/build/termux_step_copy_into_massagedir.sh"
 
 # Hook function to create {pre,post}install, {pre,post}rm-scripts for subpkgs
 # shellcheck source=scripts/build/termux_step_create_subpkg_debscripts.sh
@@ -362,6 +362,11 @@ source "$TERMUX_SCRIPTDIR/scripts/build/termux_step_strip_elf_symbols.sh"
 # Function to run termux-elf-cleaner during termux_step_massage
 # shellcheck source=scripts/build/termux_step_elf_cleaner.sh
 source "$TERMUX_SCRIPTDIR/scripts/build/termux_step_elf_cleaner.sh"
+
+# Hook for packages before massage step
+termux_step_pre_massage() {
+	return
+}
 
 # Hook for packages after massage step
 termux_step_post_massage() {
@@ -409,9 +414,10 @@ fi
 
 # Check if the package is in the compiled list
 termux_check_package_in_built_packages_list() {
-	[ ! -f "$TERMUX_BUILD_PACKAGE_CALL_BUILT_PACKAGES_LIST_FILE_PATH" ] && \
+	[[ ! -f "$TERMUX_BUILD_PACKAGE_CALL_BUILT_PACKAGES_LIST_FILE_PATH" ]] && \
 		termux_error_exit "ERROR: file '$TERMUX_BUILD_PACKAGE_CALL_BUILT_PACKAGES_LIST_FILE_PATH' not found."
-	grep -q " $1 " "$TERMUX_BUILD_PACKAGE_CALL_BUILT_PACKAGES_LIST_FILE_PATH"
+	# slightly faster than `grep -q $word $file`
+	[[ " $(< "$TERMUX_BUILD_PACKAGE_CALL_BUILT_PACKAGES_LIST_FILE_PATH") " == *" $1 "* ]]
 	return $?
 }
 
@@ -424,10 +430,41 @@ termux_add_package_to_built_packages_list() {
 
 # Check if the package is in the compiling list
 termux_check_package_in_building_packages_list() {
-	[ ! -f "$TERMUX_BUILD_PACKAGE_CALL_BUILDING_PACKAGES_LIST_FILE_PATH" ] && \
+	[[ ! -f "$TERMUX_BUILD_PACKAGE_CALL_BUILDING_PACKAGES_LIST_FILE_PATH" ]] && \
 		termux_error_exit "ERROR: file '$TERMUX_BUILD_PACKAGE_CALL_BUILDING_PACKAGES_LIST_FILE_PATH' not found."
-	grep -q "^${1}$" "$TERMUX_BUILD_PACKAGE_CALL_BUILDING_PACKAGES_LIST_FILE_PATH"
+	# slightly faster than `grep -q $word $file`
+	[[ $'\n'"$(<"$TERMUX_BUILD_PACKAGE_CALL_BUILDING_PACKAGES_LIST_FILE_PATH")"$'\n' == *$'\n'"$1"$'\n'* ]]
 	return $?
+}
+
+# Configure variables (TERMUX_ARCH, TERMUX__PREFIX__INCLUDE_DIR, TERMUX__PREFIX__LIB_DIR) for multilib-compilation
+termux_conf_multilib_vars() {
+	# Change the 64-bit architecture type to its 32-bit counterpart in the `TERMUX_ARCH` variable
+	case $TERMUX_ARCH in
+		"aarch64") TERMUX_ARCH="arm";;
+		"x86_64") TERMUX_ARCH="i686";;
+		*) termux_error_exit "It is impossible to set multilib arch for ${TERMUX_ARCH} arch."
+	esac
+	TERMUX__PREFIX__INCLUDE_DIR="$TERMUX__PREFIX__MULTI_INCLUDE_DIR"
+	TERMUX__PREFIX__LIB_DIR="$TERMUX__PREFIX__MULTI_LIB_DIR"
+}
+
+# Run functions for normal compilation and multilib-compilation
+termux_run_base_and_multilib_build_step() {
+	case "${1}" in
+		termux_step_configure|termux_step_make|termux_step_make_install) local func="${1}";;
+		*) termux_error_exit "Unsupported function '${1}'."
+	esac
+	cd "$TERMUX_PKG_BUILDDIR"
+	if [ "$TERMUX_PKG_BUILD_ONLY_MULTILIB" = "false" ]; then
+		"${func}"
+	fi
+	if [ "$TERMUX_PKG_BUILD_MULTILIB" = "true" ]; then
+		(
+			termux_step_setup_multilib_environment
+			"${func}_multilib"
+		)
+	fi
 }
 
 # Special hook to prevent use of "sudo" inside package build scripts.
@@ -693,24 +730,24 @@ for ((i=0; i<${#PACKAGE_LIST[@]}; i++)); do
 
 		# Even on continued build we might need to setup paths
 		# to tools so need to run part of configure step
-		cd "$TERMUX_PKG_BUILDDIR"
-		termux_step_configure
+		termux_run_base_and_multilib_build_step termux_step_configure
 
 		if [ "$TERMUX_CONTINUE_BUILD" == "false" ]; then
 			cd "$TERMUX_PKG_BUILDDIR"
 			termux_step_post_configure
 		fi
-		cd "$TERMUX_PKG_BUILDDIR"
-		termux_step_make
-		cd "$TERMUX_PKG_BUILDDIR"
-		termux_step_make_install
+		termux_run_base_and_multilib_build_step termux_step_make
+		termux_run_base_and_multilib_build_step termux_step_make_install
 		cd "$TERMUX_PKG_BUILDDIR"
 		termux_step_post_make_install
 		termux_step_install_pacman_hooks
 		termux_step_install_service_scripts
 		termux_step_install_license
 		cd "$TERMUX_PKG_MASSAGEDIR"
-		termux_step_extract_into_massagedir
+		termux_step_copy_into_massagedir
+		cd "$TERMUX_PKG_MASSAGEDIR/$TERMUX_PREFIX_CLASSICAL"
+		termux_step_pre_massage
+		cd "$TERMUX_PKG_MASSAGEDIR/$TERMUX_PREFIX_CLASSICAL"
 		termux_step_massage
 		cd "$TERMUX_PKG_MASSAGEDIR/$TERMUX_PREFIX_CLASSICAL"
 		termux_step_post_massage
