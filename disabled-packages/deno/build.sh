@@ -13,7 +13,7 @@ TERMUX_PKG_DEPENDS="libffi"
 TERMUX_PKG_BUILD_IN_SRC=true
 
 # Due to dependency on librusty-v8.
-TERMUX_PKG_BLACKLISTED_ARCHES="arm, i686, x86_64"
+TERMUX_PKG_EXCLUDED_ARCHES="arm, i686, x86_64"
 
 termux_step_post_get_source() {
 	git fetch --unshallow
@@ -45,7 +45,7 @@ termux_step_make() {
 	ln -sf $TERMUX_PREFIX/lib/libffi.so $libdir/
 	local libgcc="$($CC -print-libgcc-file-name)"
 	echo "INPUT($libgcc -l:libunwind.a)" > $libdir/libgcc.so
-	local cmd="cargo build --jobs $TERMUX_MAKE_PROCESSES \
+	local cmd="cargo build --jobs $TERMUX_PKG_MAKE_PROCESSES \
 		--target $CARGO_TARGET_NAME"
 	if [ "$TERMUX_DEBUG_BUILD" = "false" ]; then
 		cmd+=" --release"

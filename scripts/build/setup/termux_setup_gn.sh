@@ -1,6 +1,6 @@
 termux_setup_gn() {
 	termux_setup_ninja
-	local GN_COMMIT=53ef169800760fdc09f0773bf380fe99eaeab339
+	local GN_COMMIT=e30a1fe26e5e72cb7cb9f27d9abe2330e4115ae5
 	local GN_TARFILE=$TERMUX_COMMON_CACHEDIR/gn_$GN_COMMIT.tar.gz
 	local GN_SOURCE=https://gn.googlesource.com/gn/+archive/$GN_COMMIT.tar.gz
 
@@ -25,6 +25,7 @@ termux_setup_gn() {
 			cd $GN_FOLDER
 			(
 				unset CC CXX CFLAGS CXXFLAGS LD LDFLAGS AR AS CPP OBJCOPY OBJDUMP RANLIB READELF STRIP
+				export PATH="/usr/bin:$(echo -n $(tr ':' '\n' <<< "$PATH" | grep -v "^$TERMUX_PREFIX/bin$") | tr ' ' ':')"
 				./build/gen.py \
 					--no-last-commit-position
 				cat <<-EOF >./out/last_commit_position.h

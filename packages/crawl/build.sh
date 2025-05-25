@@ -2,9 +2,10 @@ TERMUX_PKG_HOMEPAGE=https://crawl.develz.org/
 TERMUX_PKG_DESCRIPTION="Roguelike adventure through dungeons filled with dangerous monsters"
 TERMUX_PKG_LICENSE="GPL-2.0"
 TERMUX_PKG_MAINTAINER="@termux"
-TERMUX_PKG_VERSION=0.30.1
+TERMUX_PKG_VERSION="0.33.0"
 TERMUX_PKG_SRCURL=https://github.com/crawl/crawl/archive/refs/tags/${TERMUX_PKG_VERSION}.tar.gz
-TERMUX_PKG_SHA256=f7f793271eab06822b9cb3936da54a1cbe759b471347088a4d76052ac8947597
+TERMUX_PKG_SHA256=d5b1cd9419fafb517174d573a6645dc839292b655361ada9ac42262672c1b8da
+TERMUX_PKG_AUTO_UPDATE=true
 TERMUX_PKG_DEPENDS="libc++, liblua51, libsqlite, ncurses, zlib"
 TERMUX_PKG_BUILD_IN_SRC=true
 TERMUX_PKG_EXTRA_MAKE_ARGS="
@@ -19,7 +20,7 @@ termux_step_post_get_source() {
 		| patch --silent -p1
 	pushd crawl-ref/source
 	local f
-	for f in initfile.cc main.cc syscalls.cc; do
+	for f in initfile.cc main.cc startup.cc syscalls.cc; do
 		sed -i 's|\(__ANDROID_\)_|\1_NO_TERMUX__|g' "${f}"
 	done
 	popd
