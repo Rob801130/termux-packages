@@ -2,10 +2,10 @@ TERMUX_PKG_HOMEPAGE=https://min.io/
 TERMUX_PKG_DESCRIPTION="Multi-Cloud Object Storage"
 TERMUX_PKG_LICENSE="AGPL-V3"
 TERMUX_PKG_MAINTAINER="@termux"
-TERMUX_PKG_VERSION="2023.10.24.04.42.36"
+TERMUX_PKG_VERSION="2025.07.23.15.54.02"
 _VERSION=$(sed 's/\./T/3;s/\./-/g' <<< $TERMUX_PKG_VERSION)
 TERMUX_PKG_SRCURL=https://github.com/minio/minio/archive/refs/tags/RELEASE.${_VERSION}Z.tar.gz
-TERMUX_PKG_SHA256=4eaede87dff8394e0a1545125e536a5be7032c287e5d4fab827980ac399df37c
+TERMUX_PKG_SHA256=2f63e7c6867e13fe9dd3bd7280b2326bfd83232df60c40b250c4290c4e962a8a
 TERMUX_PKG_AUTO_UPDATE=true
 TERMUX_PKG_UPDATE_VERSION_SED_REGEXP='s/T/-/g;s/[^0-9-]//g;s/-/./g'
 TERMUX_PKG_DEPENDS="resolv-conf"
@@ -29,7 +29,7 @@ termux_step_make() {
 	-X 'github.com/minio/minio/cmd.GOPATH=$(go env GOPATH)' \
 	-X 'github.com/minio/minio/cmd.GOROOT=$(go env GOROOT)' \
 	"
-	CGO_ENABLED=0 go build -tags kqueue -trimpath --ldflags="$MINIOLDFLAGS" -o minio
+	go build -tags kqueue -trimpath --ldflags="$MINIOLDFLAGS" -o minio
 }
 termux_step_make_install() {
 	install -Dm700 -t "${TERMUX_PREFIX}"/bin minio
