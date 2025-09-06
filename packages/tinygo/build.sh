@@ -3,27 +3,26 @@ TERMUX_PKG_DESCRIPTION="Go compiler for microcontrollers, WASM, CLI tools"
 TERMUX_PKG_LICENSE="custom"
 TERMUX_PKG_LICENSE_FILE="LICENSE"
 TERMUX_PKG_MAINTAINER="@termux"
-TERMUX_PKG_VERSION="0.30.0"
+TERMUX_PKG_VERSION="0.39.0"
 TERMUX_PKG_SRCURL=git+https://github.com/tinygo-org/tinygo
 TERMUX_PKG_GIT_BRANCH="v${TERMUX_PKG_VERSION}"
-TERMUX_PKG_SHA256=4ecb1764af87efcd90fcc66cb3b25d7cf3c038fceb87d032155170a4a3c65614
-TERMUX_PKG_DEPENDS="libc++, tinygo-common"
-TERMUX_PKG_RECOMMENDS="binaryen, golang"
+TERMUX_PKG_SHA256=2cea7d49bf18ad705c464af980ee6f39cf88756472bd7fefe8a424d8ffc7fa62
+TERMUX_PKG_DEPENDS="binaryen, golang, libc++"
+TERMUX_PKG_ANTI_BUILD_DEPENDS="binaryen, golang"
 TERMUX_PKG_NO_STATICSPLIT=true
 TERMUX_PKG_BUILD_IN_SRC=true
 TERMUX_PKG_HOSTBUILD=true
 TERMUX_PKG_AUTO_UPDATE=true
-
 _LLVM_OPTION="
 -DCMAKE_BUILD_TYPE=MinSizeRel
 -DGENERATOR_IS_MULTI_CONFIG=ON
--DLLVM_ENABLE_LTO=Thin
 -DLLVM_TABLEGEN=${TERMUX_PKG_HOSTBUILD_DIR}/bin/llvm-tblgen
 -DCLANG_TABLEGEN=${TERMUX_PKG_HOSTBUILD_DIR}/bin/clang-tblgen
 "
-
 _LLVM_EXTRA_BUILD_TARGETS="
+lib/libLLVMCodeGenData.a
 lib/libLLVMDWARFLinker.a
+lib/libLLVMDWARFLinkerClassic.a
 lib/libLLVMDWARFLinkerParallel.a
 lib/libLLVMDWP.a
 lib/libLLVMDebugInfoGSYM.a
@@ -38,7 +37,10 @@ lib/libLLVMLineEditor.a
 lib/libLLVMMIRParser.a
 lib/libLLVMObjCopy.a
 lib/libLLVMObjectYAML.a
+lib/libLLVMOrcDebugging.a
 lib/libLLVMOrcJIT.a
+lib/libLLVMTextAPIBinaryReader.a
+lib/libLLVMSandboxIR.a
 lib/libLLVMXRay.a
 "
 
@@ -56,8 +58,8 @@ termux_pkg_auto_update() {
 	local uptime_s="${uptime_now//.*}"
 	local uptime_h_limit=1
 	local uptime_s_limit=$((uptime_h_limit*60*60))
-	[[ -z "${uptime_s}" ]] && e=1
-	[[ "${uptime_s}" == 0 ]] && e=1
+	[[ -z "${uptime_s}" ]] && [[ "$(uname -o)" != "Android" ]] && e=1
+	[[ "${uptime_s}" == 0 ]] && [[ "$(uname -o)" != "Android" ]] && e=1
 	[[ "${uptime_s}" -gt "${uptime_s_limit}" ]] && e=1
 
 	if [[ "${e}" != 0 ]]; then
@@ -120,14 +122,14 @@ termux_step_host_build() {
 	# build whatever llvm-config think is missing
 	ninja \
 		-C "${TERMUX_PKG_HOSTBUILD_DIR}" \
-		-j "${TERMUX_MAKE_PROCESSES}" \
+		-j "${TERMUX_PKG_MAKE_PROCESSES}" \
 		${_LLVM_EXTRA_BUILD_TARGETS}
 
-	echo "===== llvm-config ====="
+	echo "INFO: ========== llvm-config =========="
 	file "${TERMUX_PKG_HOSTBUILD_DIR}/bin/llvm-config"
 	"${TERMUX_PKG_HOSTBUILD_DIR}/bin/llvm-config" --cppflags
 	"${TERMUX_PKG_HOSTBUILD_DIR}/bin/llvm-config" --ldflags --libs --system-libs
-	echo "===== llvm-config ====="
+	echo "INFO: ========== llvm-config =========="
 
 	make build/release \
 		LLVM_BUILDDIR="${TERMUX_PKG_HOSTBUILD_DIR}" \
@@ -139,6 +141,9 @@ termux_step_host_build() {
 }
 
 termux_step_pre_configure() {
+	# this is a workaround for build-all.sh issue
+	TERMUX_PKG_DEPENDS+=", tinygo-common"
+
 	# https://github.com/termux/termux-packages/issues/16358
 	if [[ "${TERMUX_ON_DEVICE_BUILD}" == "true" ]]; then
 		echo "WARN: ld.lld wrapper is not working for on-device builds. Skipping."
@@ -184,7 +189,7 @@ termux_step_make() {
 
 	ninja \
 		-C llvm-build \
-		-j "${TERMUX_MAKE_PROCESSES}" \
+		-j "${TERMUX_PKG_MAKE_PROCESSES}" \
 		${_LLVM_EXTRA_BUILD_TARGETS}
 
 	# replace Android llvm-config with wrapper around host build
