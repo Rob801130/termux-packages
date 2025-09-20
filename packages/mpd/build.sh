@@ -2,12 +2,13 @@ TERMUX_PKG_HOMEPAGE=https://www.musicpd.org
 TERMUX_PKG_DESCRIPTION="Music player daemon"
 TERMUX_PKG_LICENSE="GPL-2.0"
 TERMUX_PKG_MAINTAINER="@termux"
-TERMUX_PKG_VERSION="0.23.14"
+TERMUX_PKG_VERSION="0.24.5"
+TERMUX_PKG_REVISION=1
 TERMUX_PKG_SRCURL=https://github.com/MusicPlayerDaemon/MPD/archive/v$TERMUX_PKG_VERSION.tar.gz
-TERMUX_PKG_SHA256=3547237437368962c8a8bdec088a369a94ef66f7afc22f6fc0d643c1406bd533
+TERMUX_PKG_SHA256=ab7f9a2315eff97cc47dff5da9b9c675b1764cd50f161dc295b8a0d1956a6244
 TERMUX_PKG_AUTO_UPDATE=true
-TERMUX_PKG_DEPENDS="chromaprint, dbus, ffmpeg, game-music-emu, libao, libbz2, libc++, libcurl, libexpat, libflac, libicu, libid3tag, libmad, libmp3lame, libmpdclient, libnfs, libogg, libopus, libsamplerate, libsndfile, libsoxr, libsqlite, libvorbis, openal-soft, pcre2, pulseaudio, yajl, zlib"
-TERMUX_PKG_BUILD_DEPENDS="boost, boost-headers, libiconv"
+TERMUX_PKG_DEPENDS="libchromaprint, dbus, ffmpeg, game-music-emu, libao, libbz2, libc++, libcurl, libexpat, libflac, libicu, libid3tag, libmad, libmp3lame, libmpdclient, libnfs, libogg, libopenmpt, libopus, libsamplerate, libsndfile, libsoxr, libsqlite, libvorbis, libwavpack, libmpg123, openal-soft, pcre2, pulseaudio, yajl, zlib, fmt"
+TERMUX_PKG_BUILD_DEPENDS="libiconv"
 TERMUX_PKG_EXTRA_CONFIGURE_ARGS="
 -Dalsa=disabled
 -Depoll=false
@@ -32,11 +33,9 @@ termux_step_pre_configure() {
 		termux_error_exit "Package '$TERMUX_PKG_NAME' is not safe for on-device builds."
 	fi
 
-	CXXFLAGS+=" -DTERMUX -UANDROID"
+	CXXFLAGS+=" -DTERMUX -UANDROID -std=c++20"
 	LDFLAGS+=" -lOpenSLES"
 	rm -f $TERMUX_PREFIX/etc/mpd.conf
-
-	export BOOST_ROOT=$TERMUX_PREFIX
 }
 
 termux_step_post_make_install() {

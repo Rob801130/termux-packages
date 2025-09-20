@@ -2,12 +2,14 @@ TERMUX_PKG_HOMEPAGE=https://gitlab.gnome.org/GNOME/libsecret
 TERMUX_PKG_DESCRIPTION="A GObject-based library for accessing the Secret Service API"
 TERMUX_PKG_LICENSE="LGPL-2.1"
 TERMUX_PKG_MAINTAINER="@suhan-paradkar"
-TERMUX_PKG_VERSION="0.21.1"
+TERMUX_PKG_VERSION="0.21.7"
+TERMUX_PKG_REVISION=3
 TERMUX_PKG_SRCURL=https://download.gnome.org/sources/libsecret/${TERMUX_PKG_VERSION%.*}/libsecret-${TERMUX_PKG_VERSION}.tar.xz
-TERMUX_PKG_SHA256=674f51323a5f74e4cb7e3277da68b5afddd333eca25bc9fd2d820a92972f90b1
+TERMUX_PKG_SHA256=6b452e4750590a2b5617adc40026f28d2f4903de15f1250e1d1c40bfd68ed55e
 TERMUX_PKG_AUTO_UPDATE=true
 TERMUX_PKG_DEPENDS="glib, libgcrypt"
 TERMUX_PKG_BUILD_DEPENDS="g-ir-scanner, valac"
+TERMUX_PKG_VERSIONED_GIR=false
 TERMUX_PKG_DISABLE_GIR=false
 TERMUX_PKG_EXTRA_CONFIGURE_ARGS="
 -Dgtk_doc=false
@@ -16,16 +18,19 @@ TERMUX_PKG_EXTRA_CONFIGURE_ARGS="
 
 termux_step_pre_configure() {
 	termux_setup_gir
+	termux_setup_glib_cross_pkg_config_wrapper
+
+	# https://gitlab.gnome.org/GNOME/vala/-/issues/1413
+	CPPFLAGS+=" -Wno-incompatible-function-pointer-types"
+	export TERMUX_MESON_ENABLE_SOVERSION=1
 }
 
-termux_pkg_auto_update() {
-	local LATEST_VERSION="$(termux_repology_api_get_latest_version "${TERMUX_PKG_NAME}")"
-	if [[ "$LATEST_VERSION" == "null" ]]; then
-		echo "INFO: Already up to date."
-		return 0
-	fi
-	if termux_pkg_is_update_needed "${TERMUX_PKG_VERSION#*:}" "${LATEST_VERSION}"; then
-		mv "$TERMUX_PKG_BUILDER_DIR/gir/${TERMUX_PKG_VERSION##*:}" "$TERMUX_PKG_BUILDER_DIR/gir/${LATEST_VERSION##*:}"
-	fi
-	termux_repology_auto_update
+termux_step_post_massage() {
+	# Do not forget to bump revision of reverse dependencies and rebuild them
+	# after SOVERSION is changed.
+	local _SOVERSION_GUARD_FILES="lib/libsecret-1.so.0"
+	local f
+	for f in ${_SOVERSION_GUARD_FILES}; do
+		[ -e "${f}" ] || termux_error_exit "SOVERSION guard check failed."
+	done
 }
