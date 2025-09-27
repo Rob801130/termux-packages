@@ -2,14 +2,18 @@ TERMUX_PKG_HOMEPAGE=https://www.mingw-w64.org/
 TERMUX_PKG_DESCRIPTION="MinGW-w64 runtime for LLVM-MinGW"
 TERMUX_PKG_LICENSE="custom"
 TERMUX_PKG_MAINTAINER="@licy183"
-TERMUX_PKG_VERSION=20231017
+# Bump llvm-mingw-w64* to the same version in one PR.
+TERMUX_PKG_VERSION="20250402"
 TERMUX_PKG_SRCURL=https://github.com/mstorsjo/llvm-mingw/releases/download/$TERMUX_PKG_VERSION/llvm-mingw-$TERMUX_PKG_VERSION-ucrt-ubuntu-20.04-x86_64.tar.xz
-TERMUX_PKG_SHA256=4ca5290be640e6d9c00d676e3f3e8ddebac045ee512534c96fcf5bf70852afef
+TERMUX_PKG_SHA256=a23248baa1447df94ed14dce07997ab01da45bda74ac5370bbd098ed1c56a362
+TERMUX_PKG_AUTO_UPDATE=false
 TERMUX_PKG_PLATFORM_INDEPENDENT=true
 TERMUX_PKG_NO_STATICSPLIT=true
+TERMUX_PKG_NO_OPENMP_CHECK=true
 
 termux_step_make_install() {
 	mkdir -p $TERMUX_PREFIX/opt/llvm-mingw-w64
+	rm -rf $TERMUX_PREFIX/opt/llvm-mingw-w64/{aarch64,armv7,i686,x86_64,generic}-w64-mingw32
 	mv $TERMUX_PKG_SRCDIR/{aarch64,armv7,i686,x86_64,generic}-w64-mingw32 $TERMUX_PREFIX/opt/llvm-mingw-w64
 }
 
