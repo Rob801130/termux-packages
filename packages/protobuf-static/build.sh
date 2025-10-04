@@ -1,17 +1,20 @@
 TERMUX_PKG_HOMEPAGE=https://github.com/protocolbuffers/protobuf
 TERMUX_PKG_DESCRIPTION="Protocol buffers C++ library (static)"
-TERMUX_PKG_LICENSE="BSD 3-Clause"
+# utf8_range is licensed under MIT
+TERMUX_PKG_LICENSE="BSD 3-Clause, MIT"
+TERMUX_PKG_LICENSE_FILE="
+LICENSE
+third_party/utf8_range/LICENSE
+"
 TERMUX_PKG_MAINTAINER="@termux"
-# Please align the version with `libprotobuf` package.
-TERMUX_PKG_VERSION=22.4
-TERMUX_PKG_REVISION=1
+# Please align the version and revision with `libprotobuf` package.
+TERMUX_PKG_VERSION=32.0
 TERMUX_PKG_SRCURL=https://github.com/protocolbuffers/protobuf/archive/v${TERMUX_PKG_VERSION}.tar.gz
-TERMUX_PKG_SHA256=def8683aafc1ebaddbc777da252dfdc8e324a197757e3bfcd8b4de90d4b8cf6a
-TERMUX_PKG_DEPENDS="protobuf (>= 2:${TERMUX_PKG_VERSION})"
-TERMUX_PKG_BUILD_DEPENDS="libc++, zlib"
-TERMUX_PKG_BREAKS="libprotobuf (<< 2:21.12)"
-TERMUX_PKG_REPLACES="libprotobuf (<< 2:21.12)"
-TERMUX_PKG_CONFLICTS="protobuf-dev"
+TERMUX_PKG_SHA256=3ad017543e502ffaa9cd1f4bd4fe96cf117ce7175970f191705fa0518aff80cd
+TERMUX_PKG_AUTO_UPDATE=false
+TERMUX_PKG_DEPENDS="abseil-cpp, libc++, zlib"
+TERMUX_PKG_BREAKS="libprotobuf"
+TERMUX_PKG_CONFLICTS="libprotobuf, protobuf-dev"
 TERMUX_PKG_NO_STATICSPLIT=true
 TERMUX_PKG_EXTRA_CONFIGURE_ARGS="
 -Dprotobuf_ABSL_PROVIDER=package
@@ -20,40 +23,18 @@ TERMUX_PKG_EXTRA_CONFIGURE_ARGS="
 -DCMAKE_INSTALL_LIBDIR=lib
 "
 
-termux_step_pre_configure() {
+termux_step_post_get_source() {
 	# Version guard
-	local ver_shared=$(. $TERMUX_SCRIPTDIR/packages/libprotobuf/build.sh; echo ${TERMUX_PKG_VERSION#*:})
-	local ver_static=${TERMUX_PKG_VERSION#*:}
-	if [ "${ver_shared}" != "${ver_static}" ]; then
+	local ver_e=${TERMUX_PKG_VERSION#*:}
+	local ver_x=$(. $TERMUX_SCRIPTDIR/packages/libprotobuf/build.sh; echo ${TERMUX_PKG_VERSION#*:})
+	if [ "${ver_e}" != "${ver_x}" ]; then
 		termux_error_exit "Version mismatch between libprotobuf and protobuf-static."
 	fi
-
-	# Preserve CMake files for shared libs
-	local f
-	for f in $TERMUX_PREFIX/lib/cmake/protobuf/protobuf-targets{-release,}.cmake; do
-		if [ -e "${f}" ]; then
-			mv "${f}"{,.tmp}
-		fi
-	done
 }
 
-termux_step_post_massage() {
-	find . ! -type d \
-		! -wholename "./lib/*.a" \
-		! -wholename "./lib/cmake/protobuf/protobuf-targets-release.cmake" \
-		! -wholename "./lib/cmake/protobuf/protobuf-targets.cmake" \
-		! -wholename "./share/doc/$TERMUX_PKG_NAME/*" \
-		-exec rm -f '{}' \;
-	find . ! -type d \
-		-wholename "./lib/libutf8_*" \
-		-exec rm -f '{}' \;
-	find . -type d -empty -delete
-
-	# Restore CMake files for shared libs
-	local f
-	for f in $TERMUX_PREFIX/lib/cmake/protobuf/protobuf-targets{-release,}.cmake; do
-		if [ -e "${f}".tmp ]; then
-			mv "${f}"{.tmp,}
-		fi
-	done
+termux_step_post_make_install() {
+	# Copy lib/*.cmake to opt/protobuf-cmake/static for future use
+	mkdir -p $TERMUX_PREFIX/opt/protobuf-cmake/static
+	cp $TERMUX_PREFIX/lib/cmake/protobuf/protobuf-targets{,-release}.cmake \
+		$TERMUX_PREFIX/opt/protobuf-cmake/static/
 }
