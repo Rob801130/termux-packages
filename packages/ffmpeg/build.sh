@@ -2,11 +2,12 @@ TERMUX_PKG_HOMEPAGE=https://ffmpeg.org
 TERMUX_PKG_DESCRIPTION="Tools and libraries to manipulate a wide range of multimedia formats and protocols"
 TERMUX_PKG_LICENSE="GPL-3.0"
 TERMUX_PKG_MAINTAINER="@termux"
-TERMUX_PKG_VERSION=6.0
-TERMUX_PKG_REVISION=8
+# Please align version with `ffplay` package.
+TERMUX_PKG_VERSION="7.1.1"
+TERMUX_PKG_REVISION=6
 TERMUX_PKG_SRCURL=https://www.ffmpeg.org/releases/ffmpeg-${TERMUX_PKG_VERSION}.tar.xz
-TERMUX_PKG_SHA256=57be87c22d9b49c112b6d24bc67d42508660e6b718b3db89c44e47e289137082
-TERMUX_PKG_DEPENDS="freetype, game-music-emu, libaom, libandroid-glob, libass, libbluray, libbz2, libdav1d, libgnutls, libiconv, liblzma, libmp3lame, libopencore-amr, libopenmpt, libopus, librav1e, libsoxr, libsrt, libssh, libtheora, libv4l, libvo-amrwbenc, libvorbis, libvpx, libvidstab, libwebp, libx264, libx265, libxml2, libzimg, littlecms, ocl-icd, svt-av1, xvidcore, zlib"
+TERMUX_PKG_SHA256=733984395e0dbbe5c046abda2dc49a5544e7e0e1e2366bba849222ae9e3a03b1
+TERMUX_PKG_DEPENDS="fontconfig, freetype, fribidi, game-music-emu, harfbuzz, libaom, libandroid-glob, libandroid-stub, libass, libbluray, libbz2, libdav1d, libgnutls, libiconv, liblzma, libmp3lame, libopencore-amr, libopenmpt, libopus, librav1e, libsoxr, libsrt, libssh, libtheora, libv4l, libvidstab, libvmaf, libvo-amrwbenc, libvorbis, libvpx, libwebp, libx264, libx265, libxml2, libzimg, libzmq, littlecms, ocl-icd, rubberband, svt-av1, xvidcore, zlib"
 TERMUX_PKG_BUILD_DEPENDS="opencl-headers"
 TERMUX_PKG_CONFLICTS="libav"
 TERMUX_PKG_BREAKS="ffmpeg-dev"
@@ -15,9 +16,9 @@ TERMUX_PKG_REPLACES="ffmpeg-dev"
 termux_step_pre_configure() {
 	# Do not forget to bump revision of reverse dependencies and rebuild them
 	# after SOVERSION is changed. (These variables are also used afterwards.)
-	_FFMPEG_SOVER_avutil=58
-	_FFMPEG_SOVER_avcodec=60
-	_FFMPEG_SOVER_avformat=60
+	_FFMPEG_SOVER_avutil=59
+	_FFMPEG_SOVER_avcodec=61
+	_FFMPEG_SOVER_avformat=61
 
 	local f
 	for f in util codec format; do
@@ -25,7 +26,7 @@ termux_step_pre_configure() {
 				libav${f}/version.h libav${f}/version_major.h \
 				| sed -En 's/^libav'"${f}"'_VERSION_MAJOR=([0-9]+)$/\1/p')
 		if [ ! "${v}" ] || [ "$(eval echo \$_FFMPEG_SOVER_av${f})" != "${v}" ]; then
-			termux_error_exit "SOVERSION guard check failed for libav${f}.so."
+			termux_error_exit "SOVERSION guard check failed for libav${f}.so. expected ${v}"
 		fi
 	done
 }
@@ -57,6 +58,8 @@ termux_step_configure() {
 		--cc="$CC" \
 		--cxx="$CXX" \
 		--nm="$NM" \
+		--ar="$AR" \
+		--ranlib="llvm-ranlib" \
 		--pkg-config="$PKG_CONFIG" \
 		--strip="$STRIP" \
 		--cross-prefix="${TERMUX_HOST_PLATFORM}-" \
@@ -75,14 +78,18 @@ termux_step_configure() {
 		--enable-libass \
 		--enable-libbluray \
 		--enable-libdav1d \
+		--enable-libfontconfig \
 		--enable-libfreetype \
+		--enable-libfribidi \
 		--enable-libgme \
+		--enable-libharfbuzz \
 		--enable-libmp3lame \
 		--enable-libopencore-amrnb \
 		--enable-libopencore-amrwb \
-  		--enable-libopenmpt \
+		--enable-libopenmpt \
 		--enable-libopus \
 		--enable-librav1e \
+		--enable-librubberband \
 		--enable-libsoxr \
 		--enable-libsrt \
 		--enable-libssh \
@@ -90,6 +97,7 @@ termux_step_configure() {
 		--enable-libtheora \
 		--enable-libv4l2 \
 		--enable-libvidstab \
+		--enable-libvmaf \
 		--enable-libvo-amrwbenc \
 		--enable-libvorbis \
 		--enable-libvpx \
@@ -99,6 +107,7 @@ termux_step_configure() {
 		--enable-libxml2 \
 		--enable-libxvid \
 		--enable-libzimg \
+		--enable-libzmq \
 		--enable-mediacodec \
 		--enable-opencl \
 		--enable-shared \
@@ -124,4 +133,12 @@ termux_step_post_massage() {
 			ln -sf libav${f}.so libav${f}.so.${s}
 		fi
 	done
+}
+
+termux_step_create_debscripts() {
+	# See: https://github.com/termux/termux-packages/issues/23189#issuecomment-2663464359
+	# See also: https://github.com/termux/termux-packages/wiki/Termux-execution-environment#dynamic-library-linking-errors
+	sed -e "s|@TERMUX_PREFIX@|$TERMUX_PREFIX|g" \
+		"$TERMUX_PKG_BUILDER_DIR/postinst.sh.in" > ./postinst
+	chmod +x ./postinst
 }

@@ -2,10 +2,10 @@ TERMUX_PKG_HOMEPAGE=https://www.qemu.org
 TERMUX_PKG_DESCRIPTION="A generic and open source machine emulator and virtualizer (headless)"
 TERMUX_PKG_LICENSE="GPL-2.0"
 TERMUX_PKG_MAINTAINER="@termux"
-TERMUX_PKG_VERSION=1:8.0.2
+TERMUX_PKG_VERSION=1:8.2.10
 TERMUX_PKG_SRCURL=https://download.qemu.org/qemu-${TERMUX_PKG_VERSION:2}.tar.xz
-TERMUX_PKG_SHA256=f060abd435fbe6794125e2c398568ffc3cfa540042596907a8b18edca34cf6a5
-TERMUX_PKG_DEPENDS="glib, libbz2, libcurl, libgmp, libgnutls, libiconv, libjpeg-turbo, liblzo, libnettle, libnfs, libpixman, libpng, libslirp, libspice-server, libssh, libusb, libusbredir, ncurses, pulseaudio, qemu-common, resolv-conf, zlib, zstd"
+TERMUX_PKG_SHA256=37b4a643da8ed6015eef35f5d7f06e7259d9c95359965a0a98e9667c621ab2bb
+TERMUX_PKG_DEPENDS="alsa-lib, dtc, glib, jack2, libbz2, libcurl, libdw, libgmp, libgnutls, libiconv, libjpeg-turbo, liblzo, libnettle, libpixman, libpng, libslirp, libspice-server, libssh, libusb, libusbredir, ncurses, pulseaudio, qemu-common, resolv-conf, zlib, zstd"
 
 # Required by configuration script, but I can't find any binary that uses it.
 TERMUX_PKG_BUILD_DEPENDS="libtasn1"
@@ -105,12 +105,11 @@ termux_step_configure() {
 		--disable-xen-pci-passthrough \
 		--enable-virtfs \
 		--enable-curl \
-		--enable-fdt \
+		--enable-fdt=system \
 		--enable-kvm \
-		--disable-hax \
 		--disable-hvf \
 		--disable-whpx \
-		--enable-libnfs \
+		--disable-libnfs \
 		--enable-lzo \
 		--disable-snappy \
 		--enable-bzip2 \

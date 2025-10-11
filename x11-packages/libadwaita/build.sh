@@ -2,22 +2,24 @@ TERMUX_PKG_HOMEPAGE=https://gnome.pages.gitlab.gnome.org/libadwaita/
 TERMUX_PKG_DESCRIPTION="Building blocks for modern adaptive GNOME applications"
 TERMUX_PKG_LICENSE="LGPL-2.1"
 TERMUX_PKG_MAINTAINER="@termux"
-_MAJOR_VERSION=1.3
-TERMUX_PKG_VERSION=${_MAJOR_VERSION}.3
-TERMUX_PKG_SRCURL=https://download.gnome.org/sources/libadwaita/${_MAJOR_VERSION}/libadwaita-${TERMUX_PKG_VERSION}.tar.xz
-TERMUX_PKG_SHA256=3fb9f6f8f570e543ab2dafb8b4b94d8b376c59ad565efadfede44557e3f3a9e1
-TERMUX_PKG_DEPENDS="fribidi, glib, graphene, gtk4, pango"
+TERMUX_PKG_VERSION="1.8.1"
+TERMUX_PKG_SRCURL=https://gitlab.gnome.org/GNOME/libadwaita/-/archive/${TERMUX_PKG_VERSION}/libadwaita-${TERMUX_PKG_VERSION}.tar.gz
+TERMUX_PKG_SHA256=ac2a93957553d1f4c30359a4adecd7516d41028d2bea5606827a281f485c2006
+TERMUX_PKG_DEPENDS="appstream, fribidi, glib, graphene, gtk4, pango"
 TERMUX_PKG_BUILD_DEPENDS="g-ir-scanner, valac"
+TERMUX_PKG_AUTO_UPDATE=true
+TERMUX_PKG_VERSIONED_GIR=false
 TERMUX_PKG_DISABLE_GIR=false
 TERMUX_PKG_EXTRA_CONFIGURE_ARGS="
 -Dintrospection=enabled
 -Dvapi=true
 -Dtests=false
--Dexamples=false
+-Dexamples=true
 "
 
 termux_step_pre_configure() {
 	termux_setup_gir
+	termux_setup_glib_cross_pkg_config_wrapper
 }
 
 termux_step_post_massage() {
