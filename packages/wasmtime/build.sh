@@ -3,7 +3,7 @@ TERMUX_PKG_DESCRIPTION="A standalone runtime for WebAssembly"
 TERMUX_PKG_LICENSE="Apache-2.0"
 TERMUX_PKG_LICENSE_FILE="LICENSE"
 TERMUX_PKG_MAINTAINER="@termux"
-TERMUX_PKG_VERSION="14.0.1"
+TERMUX_PKG_VERSION="38.0.3"
 TERMUX_PKG_SRCURL=git+https://github.com/bytecodealliance/wasmtime
 TERMUX_PKG_GIT_BRANCH="v${TERMUX_PKG_VERSION}"
 TERMUX_PKG_BUILD_IN_SRC=true
@@ -27,7 +27,7 @@ TERMUX_PKG_AUTO_UPDATE=true
 # 14 |         (stat.st_mode & libc::S_IFMT) == libc::S_IFSOCK
 #    |                         ^^^^^^^^^^^^ expected `u32`, found `u16`
 # ```
-TERMUX_PKG_BLACKLISTED_ARCHES="arm, i686"
+TERMUX_PKG_EXCLUDED_ARCHES="arm, i686"
 
 termux_pkg_auto_update() {
 	local e=0
@@ -61,7 +61,7 @@ termux_step_pre_configure() {
 }
 
 termux_step_make() {
-	cargo build --jobs "${TERMUX_MAKE_PROCESSES}" --target "${CARGO_TARGET_NAME}" --release
+	cargo build --jobs "${TERMUX_PKG_MAKE_PROCESSES}" --target "${CARGO_TARGET_NAME}" --release
 }
 
 termux_step_make_install() {
