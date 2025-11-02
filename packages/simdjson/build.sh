@@ -1,0 +1,12 @@
+TERMUX_PKG_HOMEPAGE=https://simdjson.org/
+TERMUX_PKG_DESCRIPTION="A C++ library to see how fast we can parse JSON with complete validation"
+TERMUX_PKG_LICENSE="Apache-2.0"
+TERMUX_PKG_MAINTAINER="@termux"
+TERMUX_PKG_VERSION="4.1.0"
+TERMUX_PKG_SRCURL=https://github.com/simdjson/simdjson/archive/refs/tags/v${TERMUX_PKG_VERSION}.tar.gz
+TERMUX_PKG_SHA256=78115e37b2e88ec63e6ae20bb148063a9112c55bcd71404c8572078fd8a6ac3e
+TERMUX_PKG_AUTO_UPDATE=true
+TERMUX_PKG_DEPENDS="libc++"
+TERMUX_PKG_EXTRA_CONFIGURE_ARGS="
+-DBUILD_SHARED_LIBS=ON
+"

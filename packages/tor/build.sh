@@ -2,13 +2,25 @@ TERMUX_PKG_HOMEPAGE=https://www.torproject.org
 TERMUX_PKG_DESCRIPTION="The Onion Router anonymizing overlay network"
 TERMUX_PKG_LICENSE="BSD 3-Clause"
 TERMUX_PKG_MAINTAINER="@termux"
-TERMUX_PKG_VERSION="0.4.7.15"
+TERMUX_PKG_VERSION="0.4.8.19"
 TERMUX_PKG_SRCURL=https://www.torproject.org/dist/tor-$TERMUX_PKG_VERSION.tar.gz
-TERMUX_PKG_SHA256=d43b42d4249fe4b97be1248a7dc79c95f13e72f2518921a414d312c7938bf2a1
+TERMUX_PKG_SHA256=3cb649a1d33ba6a65f109d224534e93aaf0a6de84a5b1cb4b054bfa06bb74f5a
 TERMUX_PKG_AUTO_UPDATE=true
 TERMUX_PKG_DEPENDS="libevent, liblzma, openssl, resolv-conf, zlib"
 TERMUX_PKG_BUILD_DEPENDS="libandroid-glob"
-TERMUX_PKG_EXTRA_CONFIGURE_ARGS="--disable-zstd --disable-unittests"
+# We're not using '--enable-android' as it just defines 'USE_ANDROID', which
+# makes Tor writes the log to Android's logcat instead of to stdout/stderr, not
+# helpful in our case. Although it would be good to go through the source and
+# ensure that in future there is not any other Android specific behaviour which
+# affects security/anonymity.
+# without --disable-seccomp, tor would automatically enable seccomp if libseccomp was
+# previously installed in $TERMUX_PREFIX and fail with:
+# src/lib/sandbox/sandbox.c:890:32: error: use of undeclared identifier 'PF_FILE'
+TERMUX_PKG_EXTRA_CONFIGURE_ARGS="
+--disable-zstd
+--disable-unittests
+--disable-seccomp
+"
 TERMUX_PKG_CONFFILES="etc/tor/torrc"
 TERMUX_PKG_SERVICE_SCRIPT=("tor" 'exec tor 2>&1')
 
