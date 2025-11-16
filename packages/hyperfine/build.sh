@@ -2,11 +2,16 @@ TERMUX_PKG_HOMEPAGE=https://github.com/sharkdp/hyperfine
 TERMUX_PKG_DESCRIPTION="A command-line benchmarking tool"
 TERMUX_PKG_LICENSE="Apache-2.0"
 TERMUX_PKG_MAINTAINER="@termux"
-TERMUX_PKG_VERSION="1.18.0"
-TERMUX_PKG_SRCURL=https://github.com/sharkdp/hyperfine/archive/v${TERMUX_PKG_VERSION}.tar.gz
-TERMUX_PKG_SHA256=fea7b92922117ed04b9c84bb9998026264346768804f66baa40743c5528bed6b
+TERMUX_PKG_VERSION="1.19.0"
+TERMUX_PKG_REVISION=1
+TERMUX_PKG_SRCURL=https://github.com/sharkdp/hyperfine/archive/refs/tags/v${TERMUX_PKG_VERSION}.tar.gz
+TERMUX_PKG_SHA256=d1c782a54b9ebcdc1dedf8356a25ee11e11099a664a7d9413fdd3742138fa140
 TERMUX_PKG_AUTO_UPDATE=true
 TERMUX_PKG_BUILD_IN_SRC=true
+
+termux_step_pre_configure() {
+	termux_setup_rust
+}
 
 termux_step_post_make_install() {
 	# Manpages.
