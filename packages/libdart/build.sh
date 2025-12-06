@@ -1,18 +1,19 @@
-TERMUX_PKG_HOMEPAGE="https://github.com/dartsim/dart"
+TERMUX_PKG_HOMEPAGE="https://dartsim.github.io/"
 TERMUX_PKG_DESCRIPTION="Dynamic Animation and Robotics Toolkit"
 TERMUX_PKG_GROUPS="science"
 TERMUX_PKG_LICENSE="BSD 2-Clause"
 TERMUX_PKG_MAINTAINER="Pooya Moradi <pvonmoradi@gmail.com>"
-TERMUX_PKG_VERSION="6.13.0"
+TERMUX_PKG_VERSION="6.16.0"
 TERMUX_PKG_SRCURL="https://github.com/dartsim/dart/archive/refs/tags/v$TERMUX_PKG_VERSION.tar.gz"
-TERMUX_PKG_SHA256=4da3ff8cee056252a558b05625a5ff29b21e71f2995e6d7f789abbf6261895f7
+TERMUX_PKG_SHA256=a036d943688fdd6fb34f140a1f3e8d44376361a265b734a3702da5dea9f75786
 TERMUX_PKG_AUTO_UPDATE=true
-TERMUX_PKG_BLACKLISTED_ARCHES="arm, i686"
+TERMUX_PKG_EXCLUDED_ARCHES="arm, i686"
 # FIXME add ipopt, nlopt, snopt  after a proper FORTRAN compiler is
 # added (hence LAPACK)
 # FIXME why pagmo is not detected by build system?
 # FIXME add urdfdom
-TERMUX_PKG_DEPENDS="libc++, eigen, assimp, libccd, libfcl, fmt, libspdlog, libbullet, libode, libpagmo, octomap-static, libtinyxml2"
+TERMUX_PKG_DEPENDS="libc++, eigen, assimp, libccd, libfcl, fmt, libspdlog, libbullet, libode, libpagmo, octomap, libtinyxml2"
+TERMUX_PKG_BUILD_DEPENDS="octomap-static"
 
 TERMUX_PKG_EXTRA_CONFIGURE_ARGS="
 -DDART_VERBOSE=ON
@@ -24,5 +25,5 @@ TERMUX_PKG_EXTRA_CONFIGURE_ARGS="
 -DDART_FAST_DEBUG=OFF
 -DDART_FORCE_COLORED_OUTPUT=OFF
 -DDART_DOWNLOAD_DEPENDENT_PACKAGES=OFF
+-DDART_TREAT_WARNINGS_AS_ERRORS=OFF
 "
-
