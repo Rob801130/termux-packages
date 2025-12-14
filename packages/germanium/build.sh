@@ -1,3 +1,4 @@
+# Contributor: @ravener
 TERMUX_PKG_HOMEPAGE=https://github.com/matsuyoshi30/germanium
 TERMUX_PKG_DESCRIPTION="Generate image from source code"
 TERMUX_PKG_LICENSE="MIT"
@@ -20,7 +21,7 @@ termux_step_make() {
 	export GOPATH=$TERMUX_PKG_SRCDIR/go
 	go build -o germanium -v ./cmd/germanium
 }
- 
+
 termux_step_make_install() {
 	install -Dm700 -t "$TERMUX_PREFIX"/bin germanium
 }
