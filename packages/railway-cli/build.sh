@@ -2,8 +2,12 @@ TERMUX_PKG_HOMEPAGE=https://railway.app
 TERMUX_PKG_DESCRIPTION="This is the command line interface for Railway"
 TERMUX_PKG_LICENSE="MIT"
 TERMUX_PKG_MAINTAINER="@termux"
-TERMUX_PKG_VERSION="3.5.1"
+TERMUX_PKG_VERSION="4.23.0"
 TERMUX_PKG_SRCURL=https://github.com/railwayapp/cli/archive/refs/tags/v${TERMUX_PKG_VERSION}.tar.gz
-TERMUX_PKG_SHA256=3e802c369d88e6008a0e9922ac1723eb7cbdc12d8d02e93f2af34a69af80dba5
+TERMUX_PKG_SHA256=1cedab3257d2883d22ff79c923d07ff8bfd6e1bc400b30a3c2e4c913ff5544d0
 TERMUX_PKG_BUILD_IN_SRC=true
 TERMUX_PKG_AUTO_UPDATE=true
+
+termux_step_pre_configure() {
+	termux_setup_rust
+}
