@@ -2,11 +2,11 @@ TERMUX_PKG_HOMEPAGE=https://boinc.berkeley.edu/
 TERMUX_PKG_DESCRIPTION="Open-source software for volunteer computing"
 TERMUX_PKG_LICENSE="LGPL-3.0"
 TERMUX_PKG_MAINTAINER="@termux"
-_MAJOR_VERSION=7
-_MINOR_VERSION=24
-TERMUX_PKG_VERSION="7.24.1"
-TERMUX_PKG_SRCURL=https://github.com/BOINC/boinc/archive/client_release/${_MAJOR_VERSION}.${_MINOR_VERSION}/${TERMUX_PKG_VERSION}.tar.gz
-TERMUX_PKG_SHA256=f1fb18e7e62c9fdc0b46953bfc4c931e7c76d1fc7df7e3898bdc29739ee00812
+_MAJOR_VERSION=8
+_MINOR_VERSION=2
+TERMUX_PKG_VERSION="8.2.8"
+TERMUX_PKG_SRCURL=https://github.com/BOINC/boinc/archive/refs/tags/client_release/${_MAJOR_VERSION}.${_MINOR_VERSION}/${TERMUX_PKG_VERSION}.tar.gz
+TERMUX_PKG_SHA256=faaacaff557eba02fe9ae6f40402534b8bbf55343553bf42e1255b0d9f435ca0
 TERMUX_PKG_DEPENDS="libandroid-execinfo, libandroid-shmem, libc++, libcurl, openssl, zlib"
 TERMUX_PKG_NO_STATICSPLIT=true
 TERMUX_PKG_AUTO_UPDATE=true
@@ -28,7 +28,7 @@ termux_pkg_auto_update() {
 		return
 	fi
 
-	local latest_version=$(echo "${latest_refs_tags}" | tail -n1)
+	local latest_version=$(echo "${latest_refs_tags}" | sort -V | tail -n1)
 	if [[ "${latest_version}" == "${TERMUX_PKG_VERSION}" ]]; then
 		echo "INFO: No update needed. Already at version '${TERMUX_PKG_VERSION}'."
 		return
@@ -44,9 +44,10 @@ termux_pkg_auto_update() {
 
 	local major_version=$(echo "${latest_version}" | sed -E "s|([0-9]+).([0-9]+).([0-9]+)|\1|")
 	local minor_version=$(echo "${latest_version}" | sed -E "s|([0-9]+).([0-9]+).([0-9]+)|\2|")
-	sed -i "${TERMUX_PKG_BUILDER_DIR}/build.sh" \
+	sed \
 		-e "s|^_MAJOR_VERSION=.*|_MAJOR_VERSION=${major_version}|" \
-		-e "s|^_MINOR_VERSION=.*|_MINOR_VERSION=${minor_version}|"
+		-e "s|^_MINOR_VERSION=.*|_MINOR_VERSION=${minor_version}|" \
+		-i "${TERMUX_PKG_BUILDER_DIR}/build.sh"
 
 	termux_pkg_upgrade_version "${latest_version}" --skip-version-check
 }
