@@ -1,0 +1,14 @@
+TERMUX_PKG_HOMEPAGE=https://manim.community
+TERMUX_PKG_DESCRIPTION="A community-maintained Python framework for creating mathematical animations"
+TERMUX_PKG_LICENSE="MIT"
+TERMUX_PKG_MAINTAINER="Nguyen Khanh @nguynkhn"
+TERMUX_PKG_VERSION="0.19.2"
+TERMUX_PKG_REVISION=2
+TERMUX_PKG_SRCURL="https://github.com/ManimCommunity/manim/archive/refs/tags/v$TERMUX_PKG_VERSION.tar.gz"
+TERMUX_PKG_SHA256=e61992a84c684702ce732e66ae46f85341ebe4cb208f8a4c5cb33ce9ea070f02
+TERMUX_PKG_DEPENDS="cmake, ffmpeg, libcairo, pango, xorgproto, python-numpy, python-pillow, python-pip, pycairo, python-scipy, python-skia-pathops"
+TERMUX_PKG_SUGGESTS="texlive-installer"
+TERMUX_PKG_PYTHON_COMMON_BUILD_DEPS="poetry"
+TERMUX_PKG_BUILD_IN_SRC=true
+TERMUX_PKG_AUTO_UPDATE=true
+TERMUX_PKG_EXCLUDED_ARCHES="arm, i686"
