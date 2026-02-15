@@ -3,27 +3,30 @@ TERMUX_PKG_DESCRIPTION="A fast and secure WebAssembly runtime"
 TERMUX_PKG_LICENSE="MIT"
 TERMUX_PKG_LICENSE_FILE="ATTRIBUTIONS, LICENSE"
 TERMUX_PKG_MAINTAINER="@termux"
-TERMUX_PKG_VERSION="4.2.2"
-TERMUX_PKG_SRCURL=https://github.com/wasmerio/wasmer/archive/v${TERMUX_PKG_VERSION}.tar.gz
-TERMUX_PKG_SHA256=8ca4cf3afb1baa9a56d7d63ef01b5d3e4e4a9b2c67360285f1c53e7eb3ac7be1
+TERMUX_PKG_VERSION="7.0.1"
+TERMUX_PKG_SRCURL=https://github.com/wasmerio/wasmer/archive/refs/tags/v${TERMUX_PKG_VERSION}.tar.gz
+TERMUX_PKG_SHA256=1cd67765b834dd509d29fd7420819af37af852b877bc32b31c07bf92d27ffd31
 TERMUX_PKG_BUILD_IN_SRC=true
 TERMUX_PKG_NO_STATICSPLIT=true
 TERMUX_PKG_AUTO_UPDATE=true
 
 # missing support in wasmer-emscripten, wasmer-vm
-TERMUX_PKG_BLACKLISTED_ARCHES="arm, i686"
+TERMUX_PKG_EXCLUDED_ARCHES="arm, i686"
 
 termux_step_pre_configure() {
 	# https://github.com/rust-lang/compiler-builtins#unimplemented-functions
 	# https://github.com/rust-lang/rfcs/issues/2629
 	# https://github.com/rust-lang/rust/issues/46651
 	# https://github.com/termux/termux-packages/issues/8029
-	RUSTFLAGS+=" -C link-arg=$(${CC} -print-libgcc-file-name)"
+	local env_host=$(printf $CARGO_TARGET_NAME | tr a-z A-Z | sed s/-/_/g)
+	export CARGO_TARGET_${env_host}_RUSTFLAGS+=" -C link-arg=$(${CC} -print-libgcc-file-name)"
 	export WASMER_INSTALL_PREFIX="${TERMUX_PREFIX}"
 	termux_setup_rust
 }
 
 termux_step_make() {
+	local env_host=$(printf $CARGO_TARGET_NAME | tr a-z A-Z | sed s/-/_/g)
+
 	# https://github.com/wasmerio/wasmer/blob/master/Makefile
 	# Makefile only does host builds
 	# Dropping host build due to https://github.com/wasmerio/wasmer/issues/2822
@@ -46,7 +49,7 @@ termux_step_make() {
 	echo "make build-wasmer"
 	# https://github.com/wasmerio/wasmer/blob/master/lib/cli/Cargo.toml
 	cargo build \
-		--jobs "${TERMUX_MAKE_PROCESSES}" \
+		--jobs "${TERMUX_PKG_MAKE_PROCESSES}" \
 		--target "${CARGO_TARGET_NAME}" \
 		--release \
 		--manifest-path lib/cli/Cargo.toml \
@@ -56,7 +59,7 @@ termux_step_make() {
 
 	echo "make build-capi"
 	cargo build \
-		--jobs "${TERMUX_MAKE_PROCESSES}" \
+		--jobs "${TERMUX_PKG_MAKE_PROCESSES}" \
 		--target "${CARGO_TARGET_NAME}" \
 		--release \
 		--manifest-path lib/c-api/Cargo.toml \
@@ -64,25 +67,25 @@ termux_step_make() {
 		--features "wat,compiler,wasi,middlewares,webc_runner,${capi_compiler_features}"
 
 	echo "make build-wasmer-headless-minimal"
-	RUSTFLAGS="${RUSTFLAGS} -C panic=abort" \
+	export CARGO_TARGET_${env_host}_RUSTFLAGS+=" -C panic=abort"
 	cargo build \
-		--jobs "${TERMUX_MAKE_PROCESSES}" \
+		--jobs "${TERMUX_PKG_MAKE_PROCESSES}" \
 		--target "${CARGO_TARGET_NAME}" \
 		--release \
 		--manifest-path=lib/cli/Cargo.toml \
 		--no-default-features \
-		--features sys,headless-minimal \
+		--features sys,headless-minimal,${compilers} \
 		--bin wasmer-headless
 
 	echo "make build-capi-headless"
-	RUSTFLAGS="${RUSTFLAGS} -C panic=abort -C link-dead-code -C lto -O -C embed-bitcode=yes" \
+	export CARGO_TARGET_${env_host}_RUSTFLAGS+=" -C panic=abort -C link-dead-code -C lto -O -C embed-bitcode=yes"
 	cargo build \
-		--jobs "${TERMUX_MAKE_PROCESSES}" \
+		--jobs "${TERMUX_PKG_MAKE_PROCESSES}" \
 		--target "${CARGO_TARGET_NAME}" \
 		--release \
 		--manifest-path lib/c-api/Cargo.toml \
 		--no-default-features \
-		--features compiler-headless,wasi,webc_runner \
+		--features compiler-headless,wasi,webc_runner,${compilers} \
 		--target-dir target/headless
 }
 
@@ -122,7 +125,7 @@ termux_step_make_install() {
 	Libs: -L${TERMUX_PREFIX}/lib -lwasmer
 	EOF
 
-	cp ATTRIBUTIONS.md ATTRIBUTIONS
+	cp docs/ATTRIBUTIONS.md ATTRIBUTIONS
 
 	unset LLVM_SYS_140_PREFIX LLVM_VERSION WASMER_INSTALL_PREFIX
 }
