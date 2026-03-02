@@ -3,9 +3,10 @@ TERMUX_PKG_DESCRIPTION="Network Security Services (NSS)"
 TERMUX_PKG_LICENSE="MPL-2.0"
 TERMUX_PKG_LICENSE_FILE="nss/COPYING"
 TERMUX_PKG_MAINTAINER="@termux"
-TERMUX_PKG_VERSION=3.93
+TERMUX_PKG_VERSION="3.121"
 TERMUX_PKG_SRCURL=https://archive.mozilla.org/pub/security/nss/releases/NSS_${TERMUX_PKG_VERSION//./_}_RTM/src/nss-${TERMUX_PKG_VERSION}.tar.gz
-TERMUX_PKG_SHA256=15f54bb72048eb105f8c0e936a04b899e74c3db9a19bbc1e00acee2af9476a8a
+TERMUX_PKG_SHA256=cb3a8f8781bea78b7b8edd3afb7a2cb58e4881bb0160d189a39b98216ba7632e
+TERMUX_PKG_AUTO_UPDATE=true
 TERMUX_PKG_DEPENDS="libnspr, libsqlite"
 TERMUX_PKG_BUILD_IN_SRC=true
 TERMUX_PKG_EXTRA_MAKE_ARGS="
@@ -18,7 +19,7 @@ NSS_SEED_ONLY_DEV_URANDOM=1
 NSS_USE_SYSTEM_SQLITE=1
 OS_TEST=$TERMUX_ARCH
 "
-TERMUX_MAKE_PROCESSES=1
+TERMUX_PKG_MAKE_PROCESSES=1
 TERMUX_PKG_HOSTBUILD=true
 TERMUX_PKG_NO_STATICSPLIT=true
 
@@ -27,7 +28,7 @@ _LIBNSS_SIGN_LIBS="libfreebl3.so libnssdbm3.so libsoftokn3.so"
 termux_step_host_build() {
 	mkdir -p nsinstall
 	cd nsinstall
-	for f in nsinstall.c pathsub.c; do 
+	for f in nsinstall.c pathsub.c; do
 		gcc -c $TERMUX_PKG_SRCDIR/nss/coreconf/nsinstall/$f
 	done
 	gcc nsinstall.o pathsub.o -o nsinstall
@@ -45,7 +46,7 @@ termux_step_pre_configure() {
 
 termux_step_make() {
 	cd nss
-	make -j $TERMUX_MAKE_PROCESSES \
+	make -j $TERMUX_PKG_MAKE_PROCESSES \
 		CCC="$CXX" \
 		XCFLAGS="$CFLAGS $CPPFLAGS" \
 		CPPFLAGS="$CPPFLAGS" \
@@ -53,6 +54,7 @@ termux_step_make() {
 }
 
 termux_step_make_install() {
+	local nsprver="$(pkg-config --modversion nspr)"
 	local pkgconfig_dir=$TERMUX_PREFIX/lib/pkgconfig
 	mkdir -p $pkgconfig_dir
 	sed \
@@ -61,7 +63,7 @@ termux_step_make_install() {
 		-e 's|%libdir%|${prefix}/lib|g' \
 		-e 's|%includedir%|${prefix}/include/nss|g' \
 		-e "s|%NSS_VERSION%|${TERMUX_PKG_VERSION#*:}|g" \
-		-e 's|%NSPR_VERSION%|4.25|g' \
+		-e "s|%NSPR_VERSION%|${nsprver}|g" \
 		nss/pkg/pkg-config/nss.pc.in > $pkgconfig_dir/nss.pc
 	cd dist
 	install -Dm600 -t $TERMUX_PREFIX/include/nss public/nss/*

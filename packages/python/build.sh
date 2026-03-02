@@ -4,12 +4,20 @@ TERMUX_PKG_DESCRIPTION="Python 3 programming language intended to enable clear p
 TERMUX_PKG_LICENSE="custom"
 TERMUX_PKG_LICENSE_FILE="LICENSE"
 TERMUX_PKG_MAINTAINER="@termux"
-TERMUX_PKG_VERSION=3.11.6
+TERMUX_PKG_VERSION=3.12.12
 TERMUX_PKG_REVISION=1
-TERMUX_PKG_SRCURL=https://www.python.org/ftp/python/${TERMUX_PKG_VERSION}/Python-${TERMUX_PKG_VERSION}.tar.xz
-TERMUX_PKG_SHA256=0fab78fa7f133f4f38210c6260d90d7c0d5c7198446419ce057ec7ac2e6f5f38
+_DEBPYTHON_COMMIT=f358ab52bf2932ad55b1a72a29c9762169e6ac47
+TERMUX_PKG_SRCURL=(
+	https://www.python.org/ftp/python/${TERMUX_PKG_VERSION}/Python-${TERMUX_PKG_VERSION}.tar.xz
+	https://salsa.debian.org/cpython-team/python3-defaults/-/archive/${_DEBPYTHON_COMMIT}/python3-defaults-${_DEBPYTHON_COMMIT}.tar.gz
+)
+TERMUX_PKG_SHA256=(
+	fb85a13414b028c49ba18bbd523c2d055a30b56b18b92ce454ea2c51edc656c4
+	3b7a76c144d39f5c4a2c7789fd4beb3266980c2e667ad36167e1e7a357c684b0
+)
 TERMUX_PKG_AUTO_UPDATE=false
 TERMUX_PKG_DEPENDS="gdbm, libandroid-posix-semaphore, libandroid-support, libbz2, libcrypt, libexpat, libffi, liblzma, libsqlite, ncurses, ncurses-ui-libs, openssl, readline, zlib"
+TERMUX_PKG_BUILD_DEPENDS="tk"
 TERMUX_PKG_RECOMMENDS="python-ensurepip-wheels, python-pip"
 TERMUX_PKG_SUGGESTS="python-tkinter"
 TERMUX_PKG_BREAKS="python2 (<= 2.7.15), python-dev"
@@ -18,7 +26,7 @@ TERMUX_PKG_REPLACES="python-dev"
 TERMUX_PKG_PROVIDES="python3"
 
 # https://github.com/termux/termux-packages/issues/15908
-TERMUX_MAKE_PROCESSES=1
+TERMUX_PKG_MAKE_PROCESSES=1
 
 _MAJOR_VERSION="${TERMUX_PKG_VERSION%.*}"
 
@@ -46,6 +54,10 @@ TERMUX_PKG_EXTRA_CONFIGURE_ARGS+=" ac_cv_func_sem_unlink=yes"
 # Force enable posix shared memory.
 TERMUX_PKG_EXTRA_CONFIGURE_ARGS+=" ac_cv_func_shm_open=yes"
 TERMUX_PKG_EXTRA_CONFIGURE_ARGS+=" ac_cv_func_shm_unlink=yes"
+# Assume tzset() works
+TERMUX_PKG_EXTRA_CONFIGURE_ARGS+=" ac_cv_working_tzset=yes"
+# prevents 'configure: error: Cross compiling requires --with-build-python' (even during on-device build)
+TERMUX_PKG_EXTRA_CONFIGURE_ARGS+=" --with-build-python=python$_MAJOR_VERSION"
 
 TERMUX_PKG_RM_AFTER_INSTALL="
 lib/python${_MAJOR_VERSION}/test
@@ -53,6 +65,10 @@ lib/python${_MAJOR_VERSION}/*/test
 lib/python${_MAJOR_VERSION}/*/tests
 lib/python${_MAJOR_VERSION}/site-packages/*/
 "
+
+termux_step_post_get_source() {
+	mv "$TERMUX_PKG_SRCDIR/python3-defaults-$_DEBPYTHON_COMMIT" "$TERMUX_PKG_SRCDIR/debpython"
+}
 
 termux_step_pre_configure() {
 	# -O3 gains some additional performance on at least aarch64.
@@ -66,26 +82,56 @@ termux_step_pre_configure() {
 	LDFLAGS+=" -L$TERMUX_STANDALONE_TOOLCHAIN/sysroot/usr/lib"
 	if [ $TERMUX_ARCH = x86_64 ]; then LDFLAGS+=64; fi
 
-	if [ "$TERMUX_ON_DEVICE_BUILD" = "true" ]; then
-		# Python's configure script fails with
-		#    Fatal: you must define __ANDROID_API__
-		# if __ANDROID_API__ is not defined.
-		CPPFLAGS+=" -D__ANDROID_API__=$(getprop ro.build.version.sdk)"
-	else
-		TERMUX_PKG_EXTRA_CONFIGURE_ARGS+=" --with-build-python=python$_MAJOR_VERSION"
+	# these prevent errors like "call to undeclared function 'sem_clockwait'" during on-device build
+	# on devices that have API levels newer than $TERMUX_PKG_API_LEVEL
+	if [[ "$TERMUX_PKG_API_LEVEL" -lt 28 ]]; then
+		TERMUX_PKG_EXTRA_CONFIGURE_ARGS+=" ac_cv_func_fexecve=no"
 	fi
 
+	if [[ "$TERMUX_PKG_API_LEVEL" -lt 29 ]]; then
+		TERMUX_PKG_EXTRA_CONFIGURE_ARGS+=" ac_cv_func_getloadavg=no"
+	fi
+
+	if [[ "$TERMUX_PKG_API_LEVEL" -lt 30 ]]; then
+		TERMUX_PKG_EXTRA_CONFIGURE_ARGS+=" ac_cv_func_sem_clockwait=no"
+	fi
+
+	if [[ "$TERMUX_PKG_API_LEVEL" -lt 33 ]]; then
+		TERMUX_PKG_EXTRA_CONFIGURE_ARGS+=" ac_cv_func_preadv2=no"
+		TERMUX_PKG_EXTRA_CONFIGURE_ARGS+=" ac_cv_func_pwritev2=no"
+	fi
+
+	if [[ "$TERMUX_PKG_API_LEVEL" -lt 34 ]]; then
+		TERMUX_PKG_EXTRA_CONFIGURE_ARGS+=" ac_cv_func_close_range=no"
+		TERMUX_PKG_EXTRA_CONFIGURE_ARGS+=" ac_cv_func_copy_file_range=no"
+	fi
+
+	# For multiprocessing libs
+	export LDFLAGS+=" -landroid-posix-semaphore"
+
 	export LIBCRYPT_LIBS="-lcrypt"
+
+	sed -i -e "s|@TERMUX_PYTHON_VERSION@|${_MAJOR_VERSION}|g" \
+		-e "s|@TERMUX_PKG_FULLVERSION@|$(test ${TERMUX_PACKAGE_FORMAT} = pacman && echo ${TERMUX_PKG_FULLVERSION_FOR_PACMAN} || echo ${TERMUX_PKG_FULLVERSION})|g" \
+		$(find "$TERMUX_PKG_SRCDIR/debpython" -type f)
 }
 
 termux_step_post_make_install() {
 	(cd $TERMUX_PREFIX/bin
-	 ln -sf idle${_MAJOR_VERSION} idle
-	 ln -sf python${_MAJOR_VERSION} python
-	 ln -sf python${_MAJOR_VERSION}-config python-config
-	 ln -sf pydoc${_MAJOR_VERSION} pydoc)
+	ln -sf idle${_MAJOR_VERSION} idle
+	ln -sf python${_MAJOR_VERSION} python
+	ln -sf python${_MAJOR_VERSION}-config python-config
+	ln -sf pydoc${_MAJOR_VERSION} pydoc)
 	(cd $TERMUX_PREFIX/share/man/man1
-	 ln -sf python${_MAJOR_VERSION}.1 python.1)
+	ln -sf python${_MAJOR_VERSION}.1 python.1)
+
+	install -m 755 -d "$TERMUX_PREFIX/lib/python$_MAJOR_VERSION/debpython"
+	install -m 644 "$TERMUX_PKG_SRCDIR/debpython/debpython/"* \
+		"$TERMUX_PREFIX/lib/python$_MAJOR_VERSION/debpython/"
+
+	for prog in py3compile py3clean; do
+		install -m 755 "$TERMUX_PKG_SRCDIR/debpython/$prog" "$TERMUX_PREFIX/bin/"
+	done
 }
 
 termux_step_post_massage() {
@@ -116,6 +162,14 @@ termux_step_create_debscripts() {
 		echo "== Note: pip is now separate from python =="
 		echo "To install, enter the following command:"
 		echo "   pkg install python-pip"
+		echo
+	fi
+
+	if [ -d $TERMUX_PREFIX/lib/python3.11/site-packages ]; then
+		echo
+		echo "NOTE: The system python package has been updated to 3.12."
+		echo "NOTE: Run 'pkg upgrade' to update system python packages."
+		echo "NOTE: Packages installed using pip needs to be re-installed."
 		echo
 	fi
 

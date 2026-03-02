@@ -2,21 +2,27 @@ TERMUX_PKG_HOMEPAGE=https://www.mozilla.org/firefox
 TERMUX_PKG_DESCRIPTION="Mozilla Firefox web browser"
 TERMUX_PKG_LICENSE="MPL-2.0"
 TERMUX_PKG_MAINTAINER="@termux"
-TERMUX_PKG_VERSION="118.0.2"
-TERMUX_PKG_SRCURL=https://ftp.mozilla.org/pub/firefox/releases/${TERMUX_PKG_VERSION}/source/firefox-${TERMUX_PKG_VERSION}.source.tar.xz
-TERMUX_PKG_SHA256=89626520f2f0f782f37c074b94690e0f08dcf416be2b992f4aad68df5d727b21
+TERMUX_PKG_VERSION="148.0"
+TERMUX_PKG_SRCURL="https://archive.mozilla.org/pub/firefox/releases/${TERMUX_PKG_VERSION}/source/firefox-${TERMUX_PKG_VERSION}.source.tar.xz"
+TERMUX_PKG_SHA256=ec93e5040a23b7dbe9ec77eb4a7ccda9820856d7851bf2f617f3673b6354cb6f
 # ffmpeg and pulseaudio are dependencies through dlopen(3):
-TERMUX_PKG_DEPENDS="ffmpeg, fontconfig, freetype, gdk-pixbuf, glib, gtk3, libandroid-shmem, libc++, libcairo, libevent, libffi, libice, libicu, libjpeg-turbo, libnspr, libnss, libpixman, libsm, libvpx, libwebp, libx11, libxcb, libxcomposite, libxdamage, libxext, libxfixes, libxrandr, libxtst, pango, pulseaudio, zlib"
+TERMUX_PKG_DEPENDS="ffmpeg, fontconfig, freetype, gdk-pixbuf, glib, gtk3, libandroid-shmem, libandroid-spawn, libc++, libcairo, libevent, libffi, libice, libicu, libjpeg-turbo, libnspr, libnss, libpixman, libsm, libvpx, libwebp, libx11, libxcb, libxcomposite, libxdamage, libxext, libxfixes, libxrandr, libxtst, pango, pulseaudio, zlib"
 TERMUX_PKG_BUILD_DEPENDS="libcpufeatures, libice, libsm"
+TERMUX_PKG_BUILD_IN_SRC=true
 TERMUX_PKG_AUTO_UPDATE=true
-TERMUX_MAKE_PROCESSES=1
+
+# NOTE:
+# Firefox's patches are also used by Thunderbird.
+# To avoid issues and reduce duplication the shared 00XX-${topic}.patch files
+# are symlinked by Thunderbird into x11-packages/thunderbird
+# Firefox specific patches should start at 1001-${topic}.patch
 
 termux_pkg_auto_update() {
 	# https://archive.mozilla.org/pub/firefox/releases/latest/README.txt
 	local e=0
 	local api_url="https://download.mozilla.org/?product=firefox-latest&os=linux64&lang=en-US"
 	local api_url_r=$(curl -s "${api_url}")
-	local latest_version=$(echo "${api_url_r}" | sed -nE "s/.*firefox-(.*).tar.bz2.*/\1/p")
+	local latest_version=$(echo "${api_url_r}" | sed -nE "s/.*firefox-(.*).tar.xz.*/\1/p")
 	[[ -z "${api_url_r}" ]] && e=1
 	[[ -z "${latest_version}" ]] && e=1
 
@@ -24,8 +30,8 @@ termux_pkg_auto_update() {
 	local uptime_s="${uptime_now//.*}"
 	local uptime_h_limit=2
 	local uptime_s_limit=$((uptime_h_limit*60*60))
-	[[ -z "${uptime_s}" ]] && e=1
-	[[ "${uptime_s}" == 0 ]] && e=1
+	[[ -z "${uptime_s}" ]] && [[ "$(uname -o)" != "Android" ]] && e=1
+	[[ "${uptime_s}" == 0 ]] && [[ "$(uname -o)" != "Android" ]] && e=1
 	[[ "${uptime_s}" -gt "${uptime_s_limit}" ]] && e=1
 
 	if [[ "${e}" != 0 ]]; then
@@ -46,7 +52,15 @@ termux_pkg_auto_update() {
 termux_step_post_get_source() {
 	local f="media/ffvpx/config_unix_aarch64.h"
 	echo "Applying sed substitution to ${f}"
-	sed -i -E '/^#define (CONFIG_LINUX_PERF|HAVE_SYSCTL) /s/1$/0/' ${f}
+	sed -E '/^#define (CONFIG_LINUX_PERF|HAVE_SYSCTL) /s/1$/0/' -i ${f}
+
+	# Update Cargo.toml to use the patched cc
+	sed -i 's|^\(\[patch\.crates-io\]\)$|\1\ncc = { path = "third_party/rust/cc" }|g' \
+		Cargo.toml
+	(
+		termux_setup_rust
+		cargo update -p cc
+	)
 }
 
 termux_step_pre_configure() {
@@ -57,60 +71,83 @@ termux_step_pre_configure() {
 	# https://github.com/rust-lang/rust/issues/45854
 	# Out of memory when building gkrust
 	# CI shows (signal: 9, SIGKILL: kill)
-	case "${TERMUX_ARCH}" in
-	aarch64) RUSTFLAGS+=" -C debuginfo=0" ;;
-	arm) RUSTFLAGS+=" -C debuginfo=0" ;;
-	esac
+	if [ "$TERMUX_DEBUG_BUILD" = false ]; then
+		local env_host=$(printf $CARGO_TARGET_NAME | tr a-z A-Z | sed s/-/_/g)
+		export CARGO_TARGET_${env_host}_RUSTFLAGS+=" -C debuginfo=1"
+	fi
 
 	cargo install cbindgen
-
-	sed -i -e "s|%TERMUX_CARGO_TARGET_NAME%|$CARGO_TARGET_NAME|" $TERMUX_PKG_SRCDIR/build/moz.configure/rust.configure
 
 	export HOST_CC=$(command -v clang)
 	export HOST_CXX=$(command -v clang++)
 
-	CXXFLAGS+=" -U__ANDROID__"
-	LDFLAGS+=" -landroid-shmem -llog"
+	export BINDGEN_CFLAGS="--target=$CCTERMUX_HOST_PLATFORM --sysroot=$TERMUX_STANDALONE_TOOLCHAIN/sysroot"
+	local env_name=BINDGEN_EXTRA_CLANG_ARGS_${CARGO_TARGET_NAME@U}
+	env_name=${env_name//-/_}
+	export $env_name="$BINDGEN_CFLAGS"
+
+	# https://reviews.llvm.org/D141184
+	CXXFLAGS+=" -U__ANDROID__ -D_LIBCPP_HAS_NO_C11_ALIGNED_ALLOC"
+	LDFLAGS+=" -landroid-shmem -landroid-spawn -llog"
+
+	if [ "$TERMUX_ARCH" = "arm" ]; then
+		# For symbol android_getCpuFeatures
+		LDFLAGS+=" -l:libndk_compat.a"
+	fi
 }
 
 termux_step_configure() {
-	python3 $TERMUX_PKG_SRCDIR/configure.py \
-		--target=$TERMUX_HOST_PLATFORM \
-		--prefix=$TERMUX_PREFIX \
-		--with-sysroot=$TERMUX_PREFIX \
-		--enable-audio-backends=pulseaudio \
-		--enable-minify=properties \
-		--enable-mobile-optimize \
-		--enable-printing \
-		--disable-jemalloc \
-		--enable-system-ffi \
-		--enable-system-pixman \
-		--with-system-icu \
-		--with-system-jpeg=$TERMUX_PREFIX \
-		--with-system-libevent \
-		--with-system-libvpx \
-		--with-system-nspr \
-		--with-system-nss \
-		--with-system-webp \
-		--with-system-zlib \
-		--without-wasm-sandboxed-libraries \
-		--with-branding=browser/branding/official \
-		--disable-sandbox \
-		--disable-tests \
-		--disable-accessibility \
-		--disable-crashreporter \
-		--disable-dbus \
-		--disable-necko-wifi \
-		--disable-updater \
-		--disable-hardening \
-		--disable-parental-controls \
-		--disable-webspeech \
-		--disable-synth-speechd \
-		--disable-elf-hack \
-		--disable-address-sanitizer-reporter \
-		--allow-addon-sideload
+	if [ "$TERMUX_CONTINUE_BUILD" == "true" ]; then
+		termux_step_pre_configure
+		cd $TERMUX_PKG_SRCDIR
+	fi
+
+	sed \
+		-e "s|@TERMUX_HOST_PLATFORM@|${TERMUX_HOST_PLATFORM}|" \
+		-e "s|@TERMUX_PREFIX@|${TERMUX_PREFIX}|" \
+		-e "s|@CARGO_TARGET_NAME@|${CARGO_TARGET_NAME}|" \
+		$TERMUX_PKG_BUILDER_DIR/mozconfig.cfg > .mozconfig
+
+	if [ "$TERMUX_DEBUG_BUILD" = true ]; then
+		cat >>.mozconfig - <<END
+ac_add_options --enable-debug-symbols
+ac_add_options --disable-install-strip
+END
+	fi
+
+	./mach configure
+}
+
+termux_step_make() {
+	./mach build -j "$TERMUX_PKG_MAKE_PROCESSES"
+	./mach buildsymbols
+}
+
+termux_step_make_install() {
+	./mach install
+
+	install -Dm644 -t "${TERMUX_PREFIX}/share/applications" "${TERMUX_PKG_BUILDER_DIR}/firefox.desktop"
+
+	# Install icons as Arch Linux does
+	local i theme=official
+	for i in 16 22 24 32 48 64 128 256; do
+		install -Dvm644 "browser/branding/$theme/default$i.png" \
+			"$TERMUX_PREFIX/share/icons/hicolor/${i}x${i}/apps/$TERMUX_PKG_NAME.png"
+	done
+	install -Dvm644 "browser/branding/$theme/content/about-logo.png" \
+		"$TERMUX_PREFIX/share/icons/hicolor/192x192/apps/$TERMUX_PKG_NAME.png"
+	install -Dvm644 "browser/branding/$theme/content/about-logo@2x.png" \
+		"$TERMUX_PREFIX/share/icons/hicolor/384x384/apps/$TERMUX_PKG_NAME.png"
+	install -Dvm644 "browser/branding/$theme/content/about-logo.svg" \
+		"$TERMUX_PREFIX/share/icons/hicolor/scalable/apps/$TERMUX_PKG_NAME.svg"
 }
 
 termux_step_post_make_install() {
-	install -Dm644 -t "${TERMUX_PREFIX}/share/applications" "${TERMUX_PKG_BUILDER_DIR}/firefox.desktop"
+	# https://github.com/termux/termux-packages/issues/18429
+	# https://phabricator.services.mozilla.com/D181687
+	# Android 8.x and older not support "-z pack-relative-relocs" / DT_RELR
+	local r=$("${READELF}" -d "${TERMUX_PREFIX}/bin/firefox")
+	if [[ -n "$(echo "${r}" | grep "(RELR)")" ]]; then
+		termux_error_exit "DT_RELR is unsupported on Android 8.x and older\n${r}"
+	fi
 }

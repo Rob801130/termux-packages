@@ -3,10 +3,11 @@ TERMUX_PKG_DESCRIPTION="Set of products that use OS-level virtualization to deli
 TERMUX_PKG_LICENSE="Apache-2.0"
 TERMUX_PKG_MAINTAINER="@termux"
 TERMUX_PKG_VERSION=1:24.0.6
+TERMUX_PKG_REVISION=4
 LIBNETWORK_COMMIT=67e0588f1ddfaf2faf4c8cae8b7ea2876434d91c
 DOCKER_GITCOMMIT=ed223bc
-TERMUX_PKG_SRCURL=(https://github.com/moby/moby/archive/v${TERMUX_PKG_VERSION:2}.tar.gz
-                   https://github.com/docker/cli/archive/v${TERMUX_PKG_VERSION:2}.tar.gz
+TERMUX_PKG_SRCURL=(https://github.com/moby/moby/archive/refs/tags/v${TERMUX_PKG_VERSION:2}.tar.gz
+                   https://github.com/docker/cli/archive/refs/tags/v${TERMUX_PKG_VERSION:2}.tar.gz
                    https://github.com/moby/libnetwork/archive/${LIBNETWORK_COMMIT}.tar.gz)
 TERMUX_PKG_DEPENDS="containerd, libdevmapper, resolv-conf"
 TERMUX_PKG_SHA256=(29a8ee54e9ea008b40eebca42dec8b67ab257eb8ac175f67e79c110e4187d7d2
@@ -22,7 +23,7 @@ termux_step_get_source() {
 	local PKG_SHA256=(${TERMUX_PKG_SHA256[@]})
 
 	if [ ${#PKG_SRCURL[@]} != ${#PKG_SHA256[@]} ]; then
-		termux_error_exit "Error: length of TERMUX_PKG_SRCURL isn't equal to length of TERMUX_PKG_SHA256."
+		termux_error_exit "length of TERMUX_PKG_SRCURL isn't equal to length of TERMUX_PKG_SHA256."
 	fi
 
 	# download and extract packages into its own folder inside $TERMUX_PKG_SRCDIR
@@ -100,9 +101,9 @@ termux_step_make() {
 	export VERSION=v${TERMUX_PKG_VERSION}-ce
 	export DISABLE_WARN_OUTSIDE_CONTAINER=1
 	export LDFLAGS="-L ${TERMUX_PREFIX}/lib -r ${TERMUX_PREFIX}/lib"
-	make -j ${TERMUX_MAKE_PROCESSES} dynbinary
+	make -j ${TERMUX_PKG_MAKE_PROCESSES} dynbinary
 	unset GOOS GOARCH CGO_LDFLAGS CC CXX CFLAGS CXXFLAGS LDFLAGS
-	make -j ${TERMUX_MAKE_PROCESSES} manpages
+	make -j ${TERMUX_PKG_MAKE_PROCESSES} manpages
 	)
 	echo " Done!"
 }
@@ -117,9 +118,9 @@ termux_step_make_install() {
 	mkdir -p "${TERMUX_PREFIX}"/etc/docker
 	sed -e "s|@TERMUX_PREFIX@|$TERMUX_PREFIX|g" \
 		"${TERMUX_PKG_BUILDER_DIR}"/daemon.json > "${TERMUX_PREFIX}"/etc/docker/daemon.json
-        chmod 600 "${TERMUX_PREFIX}"/etc/docker/daemon.json
+	chmod 600 "${TERMUX_PREFIX}"/etc/docker/daemon.json
 	sed -e "s|@TERMUX_PREFIX@|$TERMUX_PREFIX|g" \
-	       "${TERMUX_PKG_BUILDER_DIR}/dockerd.sh" > "${TERMUX_PREFIX}/bin/dockerd"
+		"${TERMUX_PKG_BUILDER_DIR}/dockerd.sh" > "${TERMUX_PREFIX}/bin/dockerd"
 	chmod 700 "${TERMUX_PREFIX}/bin/dockerd"
 }
 

@@ -2,17 +2,11 @@ TERMUX_PKG_HOMEPAGE=https://github.com/natesales/q
 TERMUX_PKG_DESCRIPTION="A tiny command line DNS client with support for UDP, TCP, DoT, DoH, DoQ and ODoH"
 TERMUX_PKG_LICENSE="GPL-3.0"
 TERMUX_PKG_MAINTAINER="kay9925@outlook.com"
-TERMUX_PKG_VERSION="0.15.1"
-TERMUX_PKG_SRCURL="git+https://github.com/natesales/q"
-TERMUX_PKG_SHA256=01f161f8e6c281b07cc6119d8b37ea299c888c63bc43bb9d34302c0591712a71
+TERMUX_PKG_VERSION="0.19.12"
+TERMUX_PKG_SRCURL="https://github.com/natesales/q/archive/refs/tags/v${TERMUX_PKG_VERSION}.tar.gz"
+TERMUX_PKG_SHA256=1f56ebfb93fd380dee734cca9227149de2491c49db7b2c0f21019fd463081e4c
+TERMUX_PKG_AUTO_UPDATE=true
 TERMUX_PKG_BUILD_IN_SRC=true
-
-termux_step_post_get_source() {
-	local s=$(find . -type f ! -path '*/.git/*' -print0 | xargs -0 sha256sum | LC_ALL=C sort | sha256sum)
-	if [[ "${s}" != "${TERMUX_PKG_SHA256}  "* ]] ; then
-		termux_error_exit "Checksum mismatch for source files."
-	fi
-}
 
 termux_step_make() {
 	termux_setup_golang

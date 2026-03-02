@@ -2,13 +2,17 @@ TERMUX_PKG_HOMEPAGE=https://www.riverbankcomputing.com/software/pyqt/
 TERMUX_PKG_DESCRIPTION="Comprehensive Python Bindings for Qt v5"
 TERMUX_PKG_LICENSE="GPL-3.0"
 TERMUX_PKG_MAINTAINER="@termux"
-TERMUX_PKG_VERSION=5.15.9
+TERMUX_PKG_VERSION="5.15.11"
+TERMUX_PKG_REVISION=3
 TERMUX_PKG_SRCURL=https://files.pythonhosted.org/packages/source/P/PyQt5/PyQt5-${TERMUX_PKG_VERSION}.tar.gz
-TERMUX_PKG_SHA256=dc41e8401a90dc3e2b692b411bd5492ab559ae27a27424eed4bd3915564ec4c0
-TERMUX_PKG_DEPENDS="libc++, python, qt5-qtbase, qt5-qtdeclarative, qt5-qtlocation, qt5-qtmultimedia, qt5-qtsensors, qt5-qtsvg, qt5-qttools, qt5-qtwebchannel, qt5-qtwebkit, qt5-qtwebsockets, qt5-qtx11extras, qt5-qtxmlpatterns, python-pip"
+TERMUX_PKG_SHA256=fda45743ebb4a27b4b1a51c6d8ef455c4c1b5d610c90d2934c7802b5c1557c52
+TERMUX_PKG_DEPENDS="libc++, python, qt5-qtbase, qt5-qtdeclarative, qt5-qtlocation, qt5-qtmultimedia, qt5-qtsensors, qt5-qtsvg, qt5-qttools, qt5-qtwebchannel, qt5-qtwebsockets, qt5-qtx11extras, qt5-qtxmlpatterns, python-pip"
 TERMUX_PKG_BUILD_DEPENDS="qt5-qtbase-cross-tools, qt5-qtdeclarative-cross-tools, qt5-qttools-cross-tools"
-TERMUX_PKG_PYTHON_COMMON_DEPS="wheel, PyQt-builder"
-TERMUX_PKG_PYTHON_TARGET_DEPS="PyQt5-sip"
+# sip version 6.13 has this error:
+# AttributeError: 'ScopedName' object has no attribute 'types'
+# if that error disappears in the future, sip can be unpinned
+TERMUX_PKG_PYTHON_COMMON_BUILD_DEPS="wheel, 'sip>=6.6.2,<6.13.0', 'PyQt-builder>=1.14.1,<2'"
+TERMUX_PKG_PYTHON_TARGET_DEPS="'PyQt5-sip>=12.13,<13'"
 TERMUX_PKG_BUILD_IN_SRC=true
 TERMUX_PKG_EXTRA_MAKE_ARGS="
 --verbose
@@ -50,7 +54,7 @@ termux_step_pre_configure() {
 
 termux_step_make() {
 	python ${TERMUX_PYTHON_CROSSENV_PREFIX}/build/bin/sip-build \
-		--jobs ${TERMUX_MAKE_PROCESSES} \
+		--jobs ${TERMUX_PKG_MAKE_PROCESSES} \
 		${TERMUX_PKG_EXTRA_MAKE_ARGS}
 }
 
@@ -65,12 +69,4 @@ termux_step_make_install() {
 			"$TERMUX_PKG_BUILDER_DIR/${f}.in" > "${t}"
 		chmod 0700 "${t}"
 	done
-}
-
-termux_step_create_debscripts() {
-	cat <<- EOF > ./postinst
-	#!$TERMUX_PREFIX/bin/sh
-	echo "Installing dependencies through pip..."
-	pip3 install $TERMUX_PKG_PYTHON_TARGET_DEPS
-	EOF
 }
