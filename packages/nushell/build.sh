@@ -2,54 +2,26 @@ TERMUX_PKG_HOMEPAGE=https://www.nushell.sh
 TERMUX_PKG_DESCRIPTION="A new type of shell operating on structured data"
 TERMUX_PKG_LICENSE="MIT"
 TERMUX_PKG_MAINTAINER="@termux"
-TERMUX_PKG_VERSION="0.86.0"
-TERMUX_PKG_SRCURL=https://github.com/nushell/nushell/archive/$TERMUX_PKG_VERSION.tar.gz
-TERMUX_PKG_SHA256=733576c766f087e4fdabee14bbcb0ba15516472d4f443fc401386cd1d6e8d7eb
-TERMUX_PKG_AUTO_UPDATE=true
-TERMUX_PKG_DEPENDS="openssl, zlib"
+TERMUX_PKG_VERSION="0.111.0"
+TERMUX_PKG_SRCURL=https://github.com/nushell/nushell/archive/refs/tags/${TERMUX_PKG_VERSION}.tar.gz
+TERMUX_PKG_SHA256=e3a7980bb5532016036d9fdbbe0a2acc5a73f9549d1842ff6c8c0de2a6d1ddbe
+TERMUX_PKG_DEPENDS="openssl"
+TERMUX_PKG_RECOMMENDS="command-not-found, termux-api"
 TERMUX_PKG_BUILD_IN_SRC=true
-TERMUX_PKG_EXTRA_CONFIGURE_ARGS="--features=extra"
+TERMUX_PKG_AUTO_UPDATE=true
 
 termux_step_pre_configure() {
 	termux_setup_rust
 
-	export CFLAGS="${TARGET_CFLAGS}"
-
-	local _CARGO_TARGET_LIBDIR="target/${CARGO_TARGET_NAME}/release/deps"
-	mkdir -p $_CARGO_TARGET_LIBDIR
-
-	if [ $TERMUX_ARCH = "i686" ]; then
-		RUSTFLAGS+=" -C link-arg=-latomic"
-	elif [ $TERMUX_ARCH = "x86_64" ]; then
-		pushd $_CARGO_TARGET_LIBDIR
-		RUSTFLAGS+=" -C link-arg=$($CC -print-libgcc-file-name)"
-		echo "INPUT(-l:libunwind.a)" >libgcc.so
-		popd
+	if [ "$TERMUX_ARCH" = "x86_64" ]; then
+		local env_host=$(printf $CARGO_TARGET_NAME | tr a-z A-Z | sed s/-/_/g)
+		export CARGO_TARGET_${env_host}_RUSTFLAGS+=" -C link-arg=$($CC -print-libgcc-file-name)"
 	fi
-	if [ $TERMUX_ARCH != "arm" ]; then
-		TERMUX_PKG_EXTRA_CONFIGURE_ARGS+=" --features=dataframe"
-	fi
-
-	: "${CARGO_HOME:=$HOME/.cargo}"
-	export CARGO_HOME
-
-	cargo fetch --target "${CARGO_TARGET_NAME}"
-
-	mv $TERMUX_PREFIX/lib/libz.so.1{,.tmp}
-	mv $TERMUX_PREFIX/lib/libz.so{,.tmp}
-
-	ln -sfT $(readlink -f $TERMUX_PREFIX/lib/libz.so.1.tmp) \
-		$_CARGO_TARGET_LIBDIR/libz.so.1
-	ln -sfT $(readlink -f $TERMUX_PREFIX/lib/libz.so.tmp) \
-		$_CARGO_TARGET_LIBDIR/libz.so
 }
 
 termux_step_post_make_install() {
-	mv $TERMUX_PREFIX/lib/libz.so.1{.tmp,}
-	mv $TERMUX_PREFIX/lib/libz.so{.tmp,}
-}
-
-termux_step_post_massage() {
-	rm -f lib/libz.so.1
-	rm -f lib/libz.so
+	local autoload_dir="$TERMUX_PREFIX/share/nushell/vendor/autoload"
+	mkdir -p "$autoload_dir"
+	sed "s|@TERMUX_PREFIX@|$TERMUX_PREFIX|" "$TERMUX_PKG_BUILDER_DIR/command-not-found.nu" \
+		>"$autoload_dir/command-not-found.nu"
 }

@@ -2,33 +2,46 @@ TERMUX_PKG_HOMEPAGE=https://github.com/watchexec/watchexec
 TERMUX_PKG_DESCRIPTION="Executes commands in response to file modifications"
 TERMUX_PKG_LICENSE="Apache-2.0"
 TERMUX_PKG_MAINTAINER="@termux"
-TERMUX_PKG_VERSION=1.22.3
-TERMUX_PKG_SRCURL=https://github.com/watchexec/watchexec/archive/refs/tags/v${TERMUX_PKG_VERSION}.tar.gz
-TERMUX_PKG_SHA256=698ed1dc178279594542f325b23f321c888c9c12c1960fe11c0ca48ba6edad76
-TERMUX_PKG_AUTO_UPDATE=false
+TERMUX_PKG_VERSION="2.5.0"
+TERMUX_PKG_SRCURL="https://github.com/watchexec/watchexec/archive/refs/tags/v${TERMUX_PKG_VERSION}.tar.gz"
+TERMUX_PKG_SHA256=c03e5060f832069f3e32e61e8fb3600e6b9c18fc68829176d5fcfd53a86481a8
+TERMUX_PKG_AUTO_UPDATE=true
 TERMUX_PKG_BUILD_IN_SRC=true
 
-termux_step_make_install() {
+termux_step_pre_configure() {
 	termux_setup_rust
+	cargo vendor
+	find ./vendor \
+		-mindepth 1 -maxdepth 1 -type d \
+		! -wholename ./vendor/notify-rust \
+		-exec rm -rf '{}' \;
+
+	local patch="$TERMUX_PKG_BUILDER_DIR/notify-rust-bump-zbus.diff"
+	local dir="vendor/notify-rust"
+	echo "Applying patch: $patch"
+	patch -p1 -d "$dir" < "${patch}"
+
+	echo "" >> Cargo.toml
+	echo '[patch.crates-io]' >> Cargo.toml
+	echo 'notify-rust = { path = "./vendor/notify-rust" }' >> Cargo.toml
+}
+
+termux_step_make_install() {
 	cargo install \
-		--jobs $TERMUX_MAKE_PROCESSES \
+		--jobs $TERMUX_PKG_MAKE_PROCESSES \
 		--path crates/cli \
 		--force \
 		--locked \
+		--no-track \
 		--target $CARGO_TARGET_NAME \
 		--root $TERMUX_PREFIX \
 		$TERMUX_PKG_EXTRA_CONFIGURE_ARGS
-	# https://github.com/rust-lang/cargo/issues/3316:
-	rm -f $TERMUX_PREFIX/.crates.toml
-	rm -f $TERMUX_PREFIX/.crates2.json
 }
 
 termux_step_post_make_install() {
 	local f
-	for f in doc/watchexec.1.{md,pdf}; do
-		install -Dm600 -t "$TERMUX_PREFIX/share/doc/$TERMUX_PKG_NAME" \
-			"$TERMUX_PKG_SRCDIR/${f}"
-	done
+	install -Dm600 -t "$TERMUX_PREFIX/share/doc/$TERMUX_PKG_NAME" \
+		"$TERMUX_PKG_SRCDIR/doc/watchexec.1.md"
 	install -Dm600 -t "$TERMUX_PREFIX/share/man/man1" \
 		"$TERMUX_PKG_SRCDIR"/doc/watchexec.1
 	install -Dm600 -T "completions/bash" \
