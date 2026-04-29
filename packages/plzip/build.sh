@@ -1,8 +1,9 @@
-TERMUX_PKG_HOMEPAGE=http://www.nongnu.org/lzip/plzip.html
+TERMUX_PKG_HOMEPAGE=https://www.nongnu.org/lzip/plzip.html
 TERMUX_PKG_DESCRIPTION="A massively parallel lossless data compressor based on the lzlib compression library"
 TERMUX_PKG_LICENSE="GPL-2.0"
 TERMUX_PKG_MAINTAINER="@termux"
-TERMUX_PKG_VERSION=1.10
-TERMUX_PKG_SRCURL=http://download.savannah.gnu.org/releases/lzip/plzip/plzip-$TERMUX_PKG_VERSION.tar.gz
-TERMUX_PKG_SHA256=43faa58265d8b89ad75bd4ed11d347ef10065a8070748bc1ed0e06f191458098
+TERMUX_PKG_VERSION="1.13"
+TERMUX_PKG_SRCURL=https://download.savannah.gnu.org/releases/lzip/plzip/plzip-$TERMUX_PKG_VERSION.tar.gz
+TERMUX_PKG_SHA256=64d49dde20daa5fdff2b3ff28e3348082de10dd54eb10df6da7d1bc6c7a6db64
+TERMUX_PKG_AUTO_UPDATE=true
 TERMUX_PKG_DEPENDS="libc++, lzlib"
