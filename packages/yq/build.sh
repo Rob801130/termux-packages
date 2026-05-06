@@ -2,11 +2,12 @@ TERMUX_PKG_HOMEPAGE=https://mikefarah.gitbook.io/yq/
 TERMUX_PKG_DESCRIPTION="A lightweight and portable command-line YAML, JSON and XML processor"
 TERMUX_PKG_LICENSE="MIT"
 TERMUX_PKG_MAINTAINER="@termux"
-TERMUX_PKG_VERSION="4.35.2"
+TERMUX_PKG_VERSION="4.53.2"
 TERMUX_PKG_SRCURL=https://github.com/mikefarah/yq/archive/refs/tags/v${TERMUX_PKG_VERSION}.tar.gz
-TERMUX_PKG_SHA256=8b17d710c56f764e9beff06d7a7b1c77d87c4ba4219ce4ce67e7ee29670f4f13
+TERMUX_PKG_SHA256=1bc19bb8b1029148afa3465a9383f6dcccb1ecce28a0af1d81f07c93396ce37d
 TERMUX_PKG_BUILD_IN_SRC=true
 TERMUX_PKG_AUTO_UPDATE=true
+TERMUX_PKG_REPLACES="xpup"
 
 termux_step_make() {
 	termux_setup_golang

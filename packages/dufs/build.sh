@@ -3,19 +3,20 @@ TERMUX_PKG_DESCRIPTION="A file server that supports static serving, uploading, s
 TERMUX_PKG_LICENSE="Apache-2.0,MIT"
 TERMUX_PKG_LICENSE_FILE="LICENSE-APACHE,LICENSE-MIT"
 TERMUX_PKG_MAINTAINER="@termux"
-TERMUX_PKG_VERSION="0.36.0"
-TERMUX_PKG_SRCURL=https://github.com/sigoden/dufs/archive/v$TERMUX_PKG_VERSION.tar.gz
-TERMUX_PKG_SHA256=2ecd7dd45b30c9797fe96399fe58285080fee60578c61f1bb68d8b5aa38abafb
+TERMUX_PKG_VERSION="0.45.0"
+TERMUX_PKG_SRCURL=https://github.com/sigoden/dufs/archive/refs/tags/v$TERMUX_PKG_VERSION.tar.gz
+TERMUX_PKG_SHA256=62aa2cadd77e1bd9d96c77cbd832a53ffc364301c549001bf8fd9d023cbd8ab1
 TERMUX_PKG_AUTO_UPDATE=true
 TERMUX_PKG_BUILD_IN_SRC=true
 
 termux_step_pre_configure() {
 	termux_setup_rust
-	cargo build --jobs $TERMUX_MAKE_PROCESSES --target $CARGO_TARGET_NAME --release
+	cargo build --jobs $TERMUX_PKG_MAKE_PROCESSES --target $CARGO_TARGET_NAME --release
 }
 
 termux_step_post_make_install() {
 	install -Dm755 -t $TERMUX_PREFIX/bin target/${CARGO_TARGET_NAME}/release/dufs
+	install -Dm644 -t $TERMUX_PREFIX/share/doc/$TERMUX_PKG_NAME README*
 
 	install -Dm644 /dev/null "$TERMUX_PREFIX"/share/bash-completion/completions/dufs
 	install -Dm644 /dev/null "$TERMUX_PREFIX"/share/zsh/site-functions/_dufs
