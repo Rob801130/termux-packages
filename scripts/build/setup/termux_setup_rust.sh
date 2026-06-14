@@ -1,10 +1,5 @@
 # shellcheck shell=bash disable=SC1091 disable=SC2086 disable=SC2155
 termux_setup_rust() {
-	export CARGO_TARGET_NAME="${TERMUX_ARCH}-linux-android"
-	if [[ "${TERMUX_ARCH}" == "arm" ]]; then
-		CARGO_TARGET_NAME="armv7-linux-androideabi"
-	fi
-
 	if [[ "${TERMUX_ON_DEVICE_BUILD}" == "true" ]]; then
 		if [[ -z "$(command -v rustc)" ]]; then
 			cat <<- EOL
@@ -14,12 +9,6 @@ termux_setup_rust() {
 			pkg install rust
 
 			pacman -S rust
-
-			or build it from source with
-
-			./build-package.sh rust
-
-			Note that package 'rust' is known to be problematic for building on device.
 			EOL
 			exit 1
 		fi
@@ -34,14 +23,6 @@ termux_setup_rust() {
 		return
 	fi
 
-	local ENV_NAME=CARGO_TARGET_${CARGO_TARGET_NAME^^}_LINKER
-	ENV_NAME=${ENV_NAME//-/_}
-	export $ENV_NAME="${CC}"
-	export TARGET_CFLAGS="${CFLAGS-} ${CPPFLAGS}"
-	# This was getting applied for the host build of Rust macros or whatever, so
-	# unset it.
-	unset CFLAGS
-
 	if [[ -z "${TERMUX_RUST_VERSION-}" ]]; then
 		TERMUX_RUST_VERSION=$(. "${TERMUX_SCRIPTDIR}"/packages/rust/build.sh; echo ${TERMUX_PKG_VERSION})
 	fi
@@ -49,10 +30,15 @@ termux_setup_rust() {
 		TERMUX_RUST_VERSION="beta"
 	fi
 
-	curl https://sh.rustup.rs -sSf > "${TERMUX_PKG_TMPDIR}"/rustup.sh
+	curl https://sh.rustup.rs -sSfo "${TERMUX_PKG_TMPDIR}"/rustup.sh
 	sh "${TERMUX_PKG_TMPDIR}"/rustup.sh -y --default-toolchain "${TERMUX_RUST_VERSION}"
 
 	export PATH="${HOME}/.cargo/bin:${PATH}"
 
-	rustup target add "${CARGO_TARGET_NAME}"
+	if [[ -n "${CARGO_TARGET_NAME-}" ]]; then
+		# Specific version toolchain
+		rustup target add "${CARGO_TARGET_NAME}" --toolchain "${TERMUX_RUST_VERSION}"
+		# Default / Stable / rust-toolchain.toml toolchain
+		rustup target add "${CARGO_TARGET_NAME}"
+	fi
 }

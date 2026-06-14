@@ -2,15 +2,22 @@ TERMUX_PKG_HOMEPAGE=https://libtorrent.org/
 TERMUX_PKG_DESCRIPTION="A feature complete C++ bittorrent implementation focusing on efficiency and scalability"
 TERMUX_PKG_LICENSE="BSD 3-Clause"
 TERMUX_PKG_MAINTAINER="@termux"
-TERMUX_PKG_VERSION=2.0.9
-TERMUX_PKG_REVISION=1
-TERMUX_PKG_SRCURL=https://github.com/arvidn/libtorrent/releases/download/v${TERMUX_PKG_VERSION}/libtorrent-rasterbar-${TERMUX_PKG_VERSION}.tar.gz
-TERMUX_PKG_SHA256=90cd92b6061c5b664840c3d5e151d43fedb24f5b2b24e14425ffbb884ef1798e
+TERMUX_PKG_VERSION="2.0.13"
+TERMUX_PKG_SRCURL="https://github.com/arvidn/libtorrent/releases/download/v${TERMUX_PKG_VERSION}/libtorrent-rasterbar-${TERMUX_PKG_VERSION}.tar.gz"
+TERMUX_PKG_SHA256=892cb75c06318e2420de0faf9f63a908069d3d237676e2459fd30abe0cb3b1bf
+TERMUX_PKG_AUTO_UPDATE=true
 TERMUX_PKG_DEPENDS="boost, libc++, openssl, python"
 TERMUX_PKG_BUILD_DEPENDS="boost-headers"
-TERMUX_PKG_PYTHON_COMMON_DEPS="wheel"
-
+TERMUX_PKG_PYTHON_COMMON_BUILD_DEPS="wheel"
 TERMUX_PKG_EXTRA_CONFIGURE_ARGS="
+-DCMAKE_INSTALL_LIBDIR=$TERMUX__PREFIX__LIB_SUBDIR
+-DCMAKE_INSTALL_INCLUDEDIR=$TERMUX__PREFIX__INCLUDE_SUBDIR
 -Dboost-python-module-name=python
 -Dpython-bindings=ON
 "
+
+termux_step_pre_configure() {
+	# We don't get build-python in path until termux_setup_python_pip is called in
+	# termux_step_get_dependencies_python
+	TERMUX_PKG_EXTRA_CONFIGURE_ARGS+=" -DPython3_EXECUTABLE=$(command -v build-python)"
+}
