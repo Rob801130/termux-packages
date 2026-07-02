@@ -1,13 +1,12 @@
 TERMUX_PKG_HOMEPAGE=http://www.mutt.org/
 TERMUX_PKG_DESCRIPTION="Mail client with patches from neomutt"
-# License: GPL-2.0-or-later
-TERMUX_PKG_LICENSE="GPL-2.0"
+TERMUX_PKG_LICENSE="GPL-2.0-or-later"
 TERMUX_PKG_MAINTAINER="@termux"
-TERMUX_PKG_VERSION="2.2.12"
+TERMUX_PKG_VERSION="2.4.0"
 TERMUX_PKG_SRCURL=ftp://ftp.mutt.org/pub/mutt/mutt-${TERMUX_PKG_VERSION}.tar.gz
-TERMUX_PKG_SHA256=043af312f64b8e56f7fd0bf77f84a205d4c498030bd9586457665c47bb18ce38
+TERMUX_PKG_SHA256=8f6ca2ef42f8f07cdc8ec391e8aa41a702490eae55ac72016b0b94ddf44ae292
 TERMUX_PKG_AUTO_UPDATE=true
-TERMUX_PKG_DEPENDS="libandroid-support, ncurses, gdbm, openssl, libsasl, mime-support, zlib, libiconv"
+TERMUX_PKG_DEPENDS="libandroid-support, ncurses, gdbm, openssl, libsasl, media-types, zlib, libiconv"
 TERMUX_PKG_BUILD_IN_SRC=true
 
 TERMUX_PKG_EXTRA_CONFIGURE_ARGS="
@@ -50,6 +49,11 @@ etc/mime.types.dist
 "
 
 TERMUX_PKG_CONFFILES="etc/Muttrc"
+
+termux_step_pre_configure() {
+	# Workaround -std=gnu23 in bundled configure script
+	autoreconf -fiv
+}
 
 termux_step_post_configure() {
 	# Build wants to run mutt_md5:

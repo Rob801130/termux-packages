@@ -1,0 +1,12 @@
+diff -uNr a/src/recipe.rs b/src/recipe.rs
+--- a/src/recipe.rs
++++ b/src/recipe.rs
+@@ -502,6 +502,8 @@
+           .unwrap_or_else(|| Interpreter::default_script_interpreter().clone()),
+       )
+     } else if self.body.first().is_some_and(Line::is_shebang) {
++      evaluated_lines[0] = format!("#!@TERMUX_PREFIX@{}", evaluated_lines[0][2..].to_string());
++      evaluated_lines[0] = evaluated_lines[0].replace("/usr/usr", "/usr");
+       let line = evaluated_lines
+         .first()
+         .ok_or_else(|| Error::internal("evaluated_lines was empty"))?;

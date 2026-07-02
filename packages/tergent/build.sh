@@ -3,7 +3,7 @@ TERMUX_PKG_DESCRIPTION="A cryptoki/PKCS#11 library for Termux that uses Android 
 TERMUX_PKG_LICENSE="GPL-3.0"
 TERMUX_PKG_MAINTAINER="@termux"
 TERMUX_PKG_VERSION=1.0.0
-TERMUX_PKG_REVISION=4
+TERMUX_PKG_REVISION=5
 # Build from specific revision until patches are merged upstream, or
 # we decide to maintain a fork
 _COMMIT=831e300e3d75a9618963bbefbaad49bf37e2cf3c
@@ -23,7 +23,7 @@ termux_step_make() {
 		BUILD_TYPE=--release
 	fi
 
-	cargo build --jobs $TERMUX_MAKE_PROCESSES \
+	cargo build --jobs $TERMUX_PKG_MAKE_PROCESSES \
 		--target $CARGO_TARGET_NAME ${BUILD_TYPE}
 }
 

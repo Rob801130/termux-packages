@@ -1,11 +1,10 @@
 TERMUX_PKG_HOMEPAGE=https://gogs.io
 TERMUX_PKG_DESCRIPTION="A painless self-hosted Git service"
 TERMUX_PKG_LICENSE="MIT"
-TERMUX_PKG_MAINTAINER="Injamul Mohammad Mollah <mrinjamul@gmail.com>"
-TERMUX_PKG_VERSION="0.13.0"
-TERMUX_PKG_REVISION=2
-TERMUX_PKG_SRCURL=https://github.com/gogs/gogs/archive/v$TERMUX_PKG_VERSION.tar.gz
-TERMUX_PKG_SHA256=59a8c4349ed104ccd44985e940a6cdb25fca1a6019212e7f65b30f1252f627ce
+TERMUX_PKG_MAINTAINER="@termux"
+TERMUX_PKG_VERSION="0.14.3"
+TERMUX_PKG_SRCURL=https://github.com/gogs/gogs/archive/refs/tags/v$TERMUX_PKG_VERSION.tar.gz
+TERMUX_PKG_SHA256=a2c8154974b0cee30346e1a63faa2da4e5bbc813f700f10edfbcf722135b51cf
 TERMUX_PKG_AUTO_UPDATE=true
 TERMUX_PKG_DEPENDS="dash, git"
 TERMUX_PKG_CONFFILES="etc/gogs/app.ini"

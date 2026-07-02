@@ -11,21 +11,28 @@
 # But hopefully, all this can be avoided if TERMUX_PKG_UPDATE_VERSION_REGEXP is set.
 #
 termux_repology_api_get_latest_version() {
+	# shellcheck source=scripts/build/termux_error_exit.sh
+	declare -f termux_error_exit >/dev/null ||
+		. "$(dirname "$(realpath "${BASH_SOURCE[0]}")")/../../build/termux_error_exit.sh" # realpath is used to resolve symlinks.
+
 	if [[ -z "$1" ]]; then
 		termux_error_exit "Usage: ${FUNCNAME[0]} PKG_NAME"
 	fi
 
-	if [[ ! -s "${TERMUX_REPOLOGY_DATA_FILE}" ]]; then
-		# We should not install them in the case if python packages are externally managed.
-		find /usr/lib/python3.* -name EXTERNALLY-MANAGED -print -quit | grep -q . || 
-			pip3 install bs4 requests >/dev/null # Install python dependencies.
-		python3 "${TERMUX_SCRIPTDIR}"/scripts/updates/api/dump-repology-data \
-			"${TERMUX_REPOLOGY_DATA_FILE}" >/dev/null
+	local tag_name
+	# We are performing a key match for `$pkg` (function `$1`) in the repology data file and return its value.
+	if ! tag_name="$(jq --exit-status --raw-output --arg pkg "$1" '.[$pkg] // "null"' "$TERMUX_REPOLOGY_DATA_FILE")"; then
+		# If the input failed to parse log it for the issue.
+		termux_error_exit <<-EndOfError
+			${CI:+::group::}ERROR: Response seems to be invalid JSON.
+			Codepath: ${FUNCNAME[0]}
+			\`\`\`json
+			$(<"$TERMUX_REPOLOGY_DATA_FILE")
+			\`\`\`
+			${CI:+::endgroup::}
+		EndOfError
+
 	fi
 
-	local PKG_NAME="$1"
-	local version
-	# Why `--arg`? See: https://stackoverflow.com/a/54674832/15086226
-	version="$(jq -r --arg packageName "$PKG_NAME" '.[$packageName]' <"${TERMUX_REPOLOGY_DATA_FILE}")"
-	echo "${version#v}"
+	echo "${tag_name}"
 }

@@ -1,20 +1,29 @@
 TERMUX_PKG_HOMEPAGE=https://en.wikipedia.org/wiki/Util-linux
 TERMUX_PKG_DESCRIPTION="Miscellaneous system utilities"
-TERMUX_PKG_LICENSE="GPL-3.0, GPL-2.0, LGPL-2.1, BSD 3-Clause, BSD, ISC"
-TERMUX_PKG_LICENSE_FILE="\
-Documentation/licenses/COPYING.GPL-3.0-or-later
-Documentation/licenses/COPYING.GPL-2.0-or-later
-Documentation/licenses/COPYING.LGPL-2.1-or-later
-Documentation/licenses/COPYING.BSD-3-Clause
-Documentation/licenses/COPYING.BSD-4-Clause-UC
-Documentation/licenses/COPYING.ISC"
+TERMUX_PKG_LICENSE="GPL-3.0-or-later, GPL-2.0-or-later, LGPL-2.1-or-later, BSD 3-Clause, BSD, ISC"
+TERMUX_PKG_LICENSE_FILE="
+	Documentation/licenses/COPYING.GPL-3.0-or-later
+	Documentation/licenses/COPYING.GPL-2.0-or-later
+	Documentation/licenses/COPYING.LGPL-2.1-or-later
+	Documentation/licenses/COPYING.BSD-3-Clause
+	Documentation/licenses/COPYING.BSD-4-Clause-UC
+	Documentation/licenses/COPYING.ISC
+"
 TERMUX_PKG_MAINTAINER="@termux"
-TERMUX_PKG_VERSION=2.39.2
-TERMUX_PKG_REVISION=1
-TERMUX_PKG_SRCURL=https://www.kernel.org/pub/linux/utils/util-linux/v${TERMUX_PKG_VERSION:0:4}/util-linux-${TERMUX_PKG_VERSION}.tar.xz
-TERMUX_PKG_SHA256=87abdfaa8e490f8be6dde976f7c80b9b5ff9f301e1b67e3899e1f05a59a1531f
-# libcrypt is required for only newgrp and sulogin, which are not built anyways
-TERMUX_PKG_DEPENDS="libcap-ng, libsmartcols, ncurses, zlib"
+TERMUX_PKG_VERSION="2.42.1"
+TERMUX_PKG_REVISION=3
+TERMUX_PKG_SRCURL="https://www.kernel.org/pub/linux/utils/util-linux/v${TERMUX_PKG_VERSION:0:4}/util-linux-${TERMUX_PKG_VERSION}.tar.xz"
+TERMUX_PKG_SHA256=82e9158eb12a9b0b569d84e1687fed9dd18fe89ccd8ef5ac3427218a7c0d7f7f
+# <dependency>: <binaries linking to that dependency>
+# libandroid-glob: lsclocks
+# libandroid-posix-semaphore: lsipc and the lib{blkid,smartcols,uuid} subpackages
+# libcap-ng: setpriv
+# libsmartcols: cal, column, fincore, irqtop, losetup, lsclocks, lscpu, lsfd, lsipc, lsirq, prlimit, wdctl, zramctl
+# ncurses: cal, dmesg, hexdump, irqtop, setterm, ul
+# zlib: fsck.cramfs
+#
+# libcrypt would be required for newgrp and sulogin, which we are not building
+TERMUX_PKG_DEPENDS="libandroid-glob, libandroid-posix-semaphore, libcap-ng, libsmartcols, ncurses, zlib"
 TERMUX_PKG_ESSENTIAL=true
 TERMUX_PKG_BREAKS="util-linux-dev"
 TERMUX_PKG_REPLACES="util-linux-dev"
@@ -26,37 +35,45 @@ share/man/man8/lsns.8.gz
 "
 TERMUX_PKG_EXTRA_CONFIGURE_ARGS="
 ac_cv_func_setns=yes
+ac_cv_func_statx=no
 ac_cv_func_unshare=yes
 ac_cv_func_uselocale=no
+ac_cv_type_struct_statx=no
+ac_cv_type_struct_fanotify_event_info_header=no
 --enable-setpriv
 --disable-agetty
---disable-ctrlaltdel
+--disable-chmem
+--disable-copyfilerange
 --disable-eject
 --disable-fdformat
+--disable-hwclock-cmos
 --disable-ipcmk
 --disable-ipcrm
 --disable-ipcs
 --disable-kill
 --disable-last
+--disable-liblastlog2
 --disable-logger
---disable-mesg
+--disable-lsmem
 --disable-makeinstall-chown
+--disable-mesg
 --disable-mountpoint
 --disable-nologin
 --disable-pivot_root
 --disable-poman
 --disable-raw
+--disable-rfkill
 --disable-switch_root
 --disable-wall
---disable-lsmem
---disable-chmem
---disable-rfkill
---disable-hwclock-cmos
 "
 
 termux_step_pre_configure() {
-	if [ $TERMUX_ARCH_BITS = 64 ]; then
+	case "$TERMUX_ARCH_BITS" in
 		#prlimit() is only available in 64-bit bionic.
-		TERMUX_PKG_EXTRA_CONFIGURE_ARGS+=" ac_cv_func_prlimit=yes"
-	fi
+		64) TERMUX_PKG_EXTRA_CONFIGURE_ARGS+=" ac_cv_func_prlimit=yes";;
+		32) TERMUX_PKG_EXTRA_CONFIGURE_ARGS+=" --disable-year2038";;
+	esac
+
+	LDFLAGS+=" -landroid-posix-semaphore"
+	autoreconf -fi
 }
