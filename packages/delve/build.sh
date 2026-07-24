@@ -2,18 +2,18 @@ TERMUX_PKG_HOMEPAGE=https://github.com/go-delve/delve
 TERMUX_PKG_DESCRIPTION="A debugger for the Go programming language"
 TERMUX_PKG_LICENSE="MIT"
 TERMUX_PKG_MAINTAINER="Krishna kanhaiya @kcubeterm"
-TERMUX_PKG_VERSION="1.21.1"
+TERMUX_PKG_VERSION="1.27.0"
 TERMUX_PKG_DEPENDS="golang, git"
-TERMUX_PKG_SRCURL=https://github.com/go-delve/delve/archive/v${TERMUX_PKG_VERSION}.tar.gz
-TERMUX_PKG_SHA256=21dd0c98e101cd102e51ffa708d3f7d6dd32c2069b7d18bbcc35272c04dc822d
+TERMUX_PKG_SRCURL=https://github.com/go-delve/delve/archive/refs/tags/v${TERMUX_PKG_VERSION}.tar.gz
+TERMUX_PKG_SHA256=84979ac689ba26dc0a086b245cb0a3f3e6a7a246a435b2c757867e76823187a5
 TERMUX_PKG_AUTO_UPDATE=true
-TERMUX_PKG_BLACKLISTED_ARCHES="arm, i686"
+TERMUX_PKG_EXCLUDED_ARCHES="arm, i686"
 
 termux_step_make() {
 	termux_setup_golang
 	cd $TERMUX_PKG_SRCDIR
 
-	mkdir -p "$TERMUX_PKG_BUILDDIR"/src/github.com/go-delve/    
+	mkdir -p "$TERMUX_PKG_BUILDDIR"/src/github.com/go-delve/
 	mkdir -p "$TERMUX_PREFIX"/share/doc/delve
 	cp -a "$TERMUX_PKG_SRCDIR" "$TERMUX_PKG_BUILDDIR"/src/github.com/go-delve/delve/
 	cd "$TERMUX_PKG_BUILDDIR"/src/github.com/go-delve/delve/cmd/dlv/

@@ -2,9 +2,19 @@ TERMUX_PKG_HOMEPAGE=https://github.com/DLTcollab/sse2neon
 TERMUX_PKG_DESCRIPTION="A C/C++ header file that converts Intel SSE intrinsics to Arm/Aarch64 NEON intrinsics"
 TERMUX_PKG_LICENSE="MIT"
 TERMUX_PKG_MAINTAINER="@termux"
-TERMUX_PKG_VERSION=1.6.0
+TERMUX_PKG_VERSION="1.9.1"
 TERMUX_PKG_SRCURL=https://github.com/DLTcollab/sse2neon/archive/refs/tags/v${TERMUX_PKG_VERSION}.tar.gz
-TERMUX_PKG_SHA256=06f4693219deccb91b457135d836fc514a1c0a57e9fa66b143982901d2d19677
+TERMUX_PKG_SHA256=6b70e7cb8c5ce4641002b85deaafe97efdf9ade9b49884edeaf678b35f0e132f
+TERMUX_PKG_AUTO_UPDATE=true
 TERMUX_PKG_BUILD_IN_SRC=true
 TERMUX_PKG_PLATFORM_INDEPENDENT=true
-TERMUX_PKG_BLACKLISTED_ARCHES="i686"
+
+termux_step_make() {
+	# dont build tests
+	:
+}
+
+termux_step_make_install() {
+	# Makefile dont have install rule
+	install -Dm600 sse2neon.h "${TERMUX_PREFIX}"/include
+}

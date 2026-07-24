@@ -2,16 +2,16 @@ TERMUX_PKG_HOMEPAGE=https://gmic.eu
 TERMUX_PKG_DESCRIPTION="Full-featured framework for image processing"
 TERMUX_PKG_LICENSE="CeCILL-2.1"
 TERMUX_PKG_MAINTAINER="@termux"
-TERMUX_PKG_VERSION="3.3.1"
-TERMUX_PKG_SRCURL=https://gmic.eu/files/source/gmic_$TERMUX_PKG_VERSION.tar.gz
-TERMUX_PKG_SHA256=4ba6558cd6cf15483ad56285408eaf5e88952a4ac0f356a3bf514c7a7bb426ac
+TERMUX_PKG_VERSION="3.7.2"
+TERMUX_PKG_SRCURL="https://gmic.eu/files/source/gmic_$TERMUX_PKG_VERSION.tar.gz"
+TERMUX_PKG_SHA256=4b7018cc4dc88bbb933564f2c0dc31d3090989c4a7f6eee2a490f98b2861b32f
 TERMUX_PKG_AUTO_UPDATE=true
 TERMUX_PKG_DEPENDS="fftw, imath, libc++, libcurl, libjpeg-turbo, libpng, libtiff, libx11, openexr, zlib"
 TERMUX_PKG_BUILD_DEPENDS="graphicsmagick"
 TERMUX_PKG_BUILD_IN_SRC=true
 
 termux_step_configure() {
-	return 0;
+	return
 }
 
 termux_step_make() {
@@ -25,4 +25,3 @@ termux_step_make_install() {
 	cp man/gmic.1.gz $TERMUX_PREFIX/share/man/man1/
 	cp man/gmic.1.gz $TERMUX_PREFIX/share/man/man1/gmic-gm.1.gz
 }
-

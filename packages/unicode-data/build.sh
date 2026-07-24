@@ -3,14 +3,18 @@ TERMUX_PKG_DESCRIPTION="The Unicode Character Database (UCD)"
 TERMUX_PKG_LICENSE="custom"
 TERMUX_PKG_LICENSE_FILE="copyright.html"
 TERMUX_PKG_MAINTAINER="@termux"
-TERMUX_PKG_VERSION=15.1.0
-TERMUX_PKG_SRCURL=(https://unicode.org/Public/zipped/${TERMUX_PKG_VERSION}/UCD.zip
-                   https://unicode.org/Public/zipped/${TERMUX_PKG_VERSION}/Unihan.zip)
-TERMUX_PKG_SHA256=(cb1c663d053926500cd501229736045752713a066bd75802098598b7a7056177
-                   a0226610e324bcf784ac380e11f4cbf533ee1e6b3d028b0991bf8c0dc3f85853)
+TERMUX_PKG_VERSION="18.0.0"
+TERMUX_PKG_SRCURL=(
+	https://unicode.org/Public/${TERMUX_PKG_VERSION}/ucd/UCD.zip
+	https://unicode.org/Public/${TERMUX_PKG_VERSION}/ucd/Unihan.zip
+)
+TERMUX_PKG_SHA256=(
+	c961d4405edd144b5052cfaf8bf7db54af44ebc5db7181f83c6c52df99e9363a
+	835593ec1ca206486cdef6860a41930343ac014d7d61f7f7ef2b25084fadbdd4
+)
 TERMUX_PKG_PLATFORM_INDEPENDENT=true
-#The package contains multiple SRCURL and SHA256, this is not supported by auto-updater script
-TERMUX_PKG_AUTO_UPDATE=false
+TERMUX_PKG_AUTO_UPDATE=true
+TERMUX_PKG_UPDATE_METHOD=repology
 
 termux_step_get_source() {
 	local i

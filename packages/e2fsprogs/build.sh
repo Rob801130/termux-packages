@@ -3,13 +3,13 @@ TERMUX_PKG_DESCRIPTION="EXT 2/3/4 filesystem utilities"
 TERMUX_PKG_LICENSE="GPL-2.0, LGPL-2.0"
 TERMUX_PKG_LICENSE_FILE="NOTICE"
 TERMUX_PKG_MAINTAINER="@termux"
-TERMUX_PKG_VERSION=1.47.0
-TERMUX_PKG_REVISION=1
+TERMUX_PKG_VERSION="1.47.4"
 TERMUX_PKG_SRCURL=https://www.kernel.org/pub/linux/kernel/people/tytso/e2fsprogs/v$TERMUX_PKG_VERSION/e2fsprogs-$TERMUX_PKG_VERSION.tar.xz
-TERMUX_PKG_SHA256=144af53f2bbd921cef6f8bea88bb9faddca865da3fbc657cc9b4d2001097d5db
+TERMUX_PKG_SHA256=fd5bf388cbdbe006a3d3b318d983b2948382440acc85a87f1e7d108653e8db0b
+TERMUX_PKG_AUTO_UPDATE=true
 TERMUX_PKG_CONFFILES="etc/mke2fs.conf"
 TERMUX_PKG_NO_STATICSPLIT=true
-TERMUX_PKG_DEPENDS="libblkid, libuuid"
+TERMUX_PKG_DEPENDS="libarchive, libblkid, libuuid"
 TERMUX_PKG_BREAKS="e2fsprogs-dev"
 TERMUX_PKG_REPLACES="e2fsprogs-dev"
 
@@ -23,7 +23,9 @@ TERMUX_PKG_EXTRA_CONFIGURE_ARGS="
 --disable-libuuid
 --disable-libblkid
 --disable-uuidd
---with-crond_dir=${TERMUX_PREFIX}/etc/cron.d"
+--with-crond_dir=${TERMUX_PREFIX}/etc/cron.d
+--with-libarchive
+"
 
 # Remove com_err.h to avoid conflicting with krb5-dev:
 TERMUX_PKG_RM_AFTER_INSTALL="

@@ -1,0 +1,14 @@
+TERMUX_PKG_HOMEPAGE=https://github.com/OpenSC/libp11
+TERMUX_PKG_DESCRIPTION="PKCS#11 wrapper library"
+TERMUX_PKG_LICENSE="LGPL-2.1"
+TERMUX_PKG_MAINTAINER="@termux"
+TERMUX_PKG_VERSION="0.4.19"
+TERMUX_PKG_SRCURL=https://github.com/OpenSC/libp11/releases/download/libp11-${TERMUX_PKG_VERSION}/libp11-${TERMUX_PKG_VERSION}.tar.gz
+TERMUX_PKG_SHA256=a344ca201ffa71822881e45e86457ab9a0115d07d03da0d69c7e5a7268255a35
+TERMUX_PKG_AUTO_UPDATE=true
+# Make sure we strip off the entire `libp11-` prefix from the tag name.
+TERMUX_PKG_UPDATE_VERSION_SED_REGEXP='s/^libp11-//'
+TERMUX_PKG_DEPENDS="openssl"
+TERMUX_PKG_EXTRA_CONFIGURE_ARGS="
+--disable-static
+"

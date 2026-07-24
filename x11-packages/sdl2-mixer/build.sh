@@ -3,13 +3,15 @@ TERMUX_PKG_DESCRIPTION="A simple multi-channel audio mixer"
 TERMUX_PKG_LICENSE="ZLIB"
 TERMUX_PKG_LICENSE_FILE="LICENSE.txt"
 TERMUX_PKG_MAINTAINER="@termux"
-TERMUX_PKG_VERSION=2.6.3
-TERMUX_PKG_SRCURL=https://github.com/libsdl-org/SDL_mixer/releases/download/release-${TERMUX_PKG_VERSION}/SDL2_mixer-${TERMUX_PKG_VERSION}.tar.gz 
-TERMUX_PKG_SHA256=7a6ba86a478648ce617e3a5e9277181bc67f7ce9876605eea6affd4a0d6eea8f
-TERMUX_PKG_AUTO_UPDATE=true
-TERMUX_PKG_UPDATE_VERSION_SED_REGEXP='s/.*-//'
-TERMUX_PKG_DEPENDS="fluidsynth, libflac, libmodplug, libvorbis, mpg123, opusfile, sdl2"
+TERMUX_PKG_VERSION="2.8.2"
+TERMUX_PKG_SRCURL="https://github.com/libsdl-org/SDL_mixer/releases/download/release-${TERMUX_PKG_VERSION}/SDL2_mixer-${TERMUX_PKG_VERSION}.tar.gz"
+TERMUX_PKG_SHA256=938dff531d00ace2296557a6599abe6f34599e2f34f0a4a08a397e2ccac8b8f7
+TERMUX_PKG_DEPENDS="fluidsynth, libxmp, libflac, libmodplug, libvorbis, libmpg123, opusfile, sdl2 | sdl2-compat"
+TERMUX_PKG_ANTI_BUILD_DEPENDS="sdl2-compat"
+# Prevent updating to SDL3 version
+TERMUX_PKG_AUTO_UPDATE=false
 TERMUX_PKG_EXTRA_CONFIGURE_ARGS="
+--enable-music-mod-xmp
 --disable-music-mod-modplug-shared
 --disable-music-midi-fluidsynth-shared
 --disable-music-ogg-stb
