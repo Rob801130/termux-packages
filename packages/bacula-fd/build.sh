@@ -1,11 +1,13 @@
 TERMUX_PKG_HOMEPAGE=https://www.bacula.org
 TERMUX_PKG_DESCRIPTION="Bacula backup software"
-TERMUX_PKG_LICENSE="AGPL-V3"
+TERMUX_PKG_LICENSE="AGPL-3.0-only"
 TERMUX_PKG_LICENSE_FILE="LICENSE"
-TERMUX_PKG_MAINTAINER="Matlink <matlink@matlink.fr>"
-TERMUX_PKG_VERSION=13.0.3
-TERMUX_PKG_SRCURL=https://sourceforge.net/projects/bacula/files/bacula/${TERMUX_PKG_VERSION}/bacula-${TERMUX_PKG_VERSION}.tar.gz
-TERMUX_PKG_SHA256=0949c32be1090585e88e4c01d828002e87603136d87c598a29dff42bb3ed2a40
+TERMUX_PKG_MAINTAINER="@termux"
+TERMUX_PKG_VERSION="15.0.3"
+TERMUX_PKG_REVISION=2
+TERMUX_PKG_SRCURL="https://sourceforge.net/projects/bacula/files/bacula/${TERMUX_PKG_VERSION}/bacula-${TERMUX_PKG_VERSION}.tar.gz"
+TERMUX_PKG_SHA256=294afd3d2eb9d5b71c3d0e88fdf19eb513bfdb843b28d35c0552e4ae062827a1
+TERMUX_PKG_AUTO_UPDATE=true
 TERMUX_PKG_DEPENDS="libc++, liblzo, openssl, zlib"
 TERMUX_PKG_BUILD_IN_SRC=true
 TERMUX_PKG_CONFFILES=etc/bacula/bacula-fd.conf
@@ -33,5 +35,5 @@ termux_step_pre_configure() {
 }
 
 termux_step_post_massage() {
-	mkdir -p ${TERMUX_PKG_MASSAGEDIR}${TERMUX_PREFIX}/var/run/bacula
+	mkdir -p "${TERMUX_PKG_MASSAGEDIR}${TERMUX_PREFIX}/var/run/bacula"
 }

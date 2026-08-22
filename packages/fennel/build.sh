@@ -2,9 +2,15 @@ TERMUX_PKG_HOMEPAGE="https://fennel-lang.org"
 TERMUX_PKG_DESCRIPTION="A Lisp that compiles to Lua"
 TERMUX_PKG_LICENSE="MIT"
 TERMUX_PKG_MAINTAINER="@termux"
-TERMUX_PKG_VERSION=1.3.0
-TERMUX_PKG_SRCURL="https://github.com/bakpakin/Fennel/archive/refs/tags/$TERMUX_PKG_VERSION.tar.gz"
-TERMUX_PKG_SHA256=bae4a658b50f6febbaa6183c89208aae4459531fa15e137c0eb8ff98684eb7c3
-TERMUX_PKG_DEPENDS="lua53"
+TERMUX_PKG_VERSION="1.6.1"
+TERMUX_PKG_SRCURL="https://git.sr.ht/~technomancy/fennel/archive/$TERMUX_PKG_VERSION.tar.gz"
+TERMUX_PKG_SHA256=f0f188e9a4424851d9263ab69302b6b2ffc5c6efb67a25fffc52187a29c94024
+TERMUX_PKG_AUTO_UPDATE=true
+TERMUX_PKG_DEPENDS="lua54"
 TERMUX_PKG_PLATFORM_INDEPENDENT=true
 TERMUX_PKG_BUILD_IN_SRC=true
+
+termux_step_pre_configure() {
+	export LUA_VERSION=5.4
+	export LUA=lua5.4
+}
