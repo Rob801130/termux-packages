@@ -2,18 +2,19 @@ TERMUX_PKG_HOMEPAGE=https://github.com/falconindy/pkgfile
 TERMUX_PKG_DESCRIPTION="An alpm .files metadata explorer"
 TERMUX_PKG_LICENSE="MIT"
 TERMUX_PKG_MAINTAINER="@termux"
-TERMUX_PKG_VERSION=21
+TERMUX_PKG_VERSION="26"
 TERMUX_PKG_SRCURL=https://github.com/falconindy/pkgfile/archive/refs/tags/v${TERMUX_PKG_VERSION}.tar.gz
-TERMUX_PKG_SHA256=809d75738cae785839950c85371ac087bc3b450eed497a565eca01b653f254a5
+TERMUX_PKG_SHA256=8c6c558ebec32a6d40ba90a18a06328e382c0639879ae02dd83dfa03a5d51988
 TERMUX_PKG_AUTO_UPDATE=true
 TERMUX_PKG_UPDATE_TAG_TYPE="newest-tag"
-TERMUX_PKG_DEPENDS="libandroid-glob, libarchive, libcurl, pcre"
+TERMUX_PKG_DEPENDS="libandroid-glob, libandroid-utimes, libarchive, libcurl, pcre"
 TERMUX_PKG_EXTRA_CONFIGURE_ARGS="
 -Dsystemd_units=false
 "
 
 termux_step_pre_configure() {
-	LDFLAGS+=" -landroid-glob"
+	CXXFLAGS+=" -Wno-c++11-narrowing"
+	LDFLAGS+=" -landroid-glob -landroid-utimes"
 }
 
 termux_step_create_debscripts() {
