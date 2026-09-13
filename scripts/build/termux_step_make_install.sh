@@ -3,10 +3,10 @@ termux_step_make_install() {
 	[ "$TERMUX_PKG_METAPACKAGE" = "true" ] && return
 
 	if test -f build.ninja; then
-		ninja -w dupbuild=warn -j $TERMUX_MAKE_PROCESSES install
+		ninja -j $TERMUX_PKG_MAKE_PROCESSES install
 	elif test -f setup.py || test -f pyproject.toml || test -f setup.cfg; then
 		pip install --no-deps . --prefix $TERMUX_PREFIX
-	elif ls ./*.cabal &>/dev/null; then
+	elif ls ./*.cabal &>/dev/null || ls ./cabal.project &>/dev/null; then
 		# Workaround until `cabal install` is fixed.
 		while read -r bin; do
 			[[ -f "$bin" ]] || termux_error_exit "'$bin', no such file. Has build completed?"
@@ -22,15 +22,26 @@ termux_step_make_install() {
 			make -j 1 ${TERMUX_PKG_EXTRA_MAKE_ARGS} ${TERMUX_PKG_MAKE_INSTALL_TARGET}
 		fi
 	elif test -f Cargo.toml; then
-		termux_setup_rust
+		if [[ -z "$(command -v cargo)" ]]; then
+			termux_error_exit "cargo command is not found! Please add termux_setup_rust in package's build.sh!"
+		fi
+		local CARGO_DEBUG_FLAG=''
+		if [[ "$TERMUX_DEBUG_BUILD" == "true" ]]; then
+			CARGO_DEBUG_FLAG='--debug'
+		fi
 		cargo install \
-			--jobs $TERMUX_MAKE_PROCESSES \
+			--jobs $TERMUX_PKG_MAKE_PROCESSES \
 			--path . \
 			--force \
 			--locked \
 			--no-track \
 			--target $CARGO_TARGET_NAME \
 			--root $TERMUX_PREFIX \
+			$CARGO_DEBUG_FLAG \
 			$TERMUX_PKG_EXTRA_CONFIGURE_ARGS
 	fi
+}
+
+termux_step_make_install_multilib() {
+	termux_step_make_install
 }

@@ -2,10 +2,9 @@ TERMUX_PKG_HOMEPAGE=https://www.samba.org/
 TERMUX_PKG_DESCRIPTION="SMB/CIFS fileserver"
 TERMUX_PKG_LICENSE="GPL-3.0"
 TERMUX_PKG_MAINTAINER="@termux"
-TERMUX_PKG_VERSION=4.16.10
-TERMUX_PKG_REVISION=2
+TERMUX_PKG_VERSION="4.24.6"
 TERMUX_PKG_SRCURL=https://download.samba.org/pub/samba/samba-${TERMUX_PKG_VERSION}.tar.gz
-TERMUX_PKG_SHA256=c077d698a2b871cf130afe2f6fa6aaf321a25eac611f22edae8a7f3e8c9c4d3f
+TERMUX_PKG_SHA256=810cc955acb367e9bde556dccfb50db177a02b7c553aa1629a0b905fa7616267
 TERMUX_PKG_DEPENDS="krb5, libandroid-execinfo, libandroid-spawn, libbsd, libcap, libcrypt, libgnutls, libiconv, libicu, libpopt, libtalloc, libtasn1, libtirpc, ncurses, openssl, readline, tdb-tools, zlib"
 TERMUX_PKG_BUILD_DEPENDS="e2fsprogs"
 TERMUX_PKG_BUILD_IN_SRC=true
@@ -20,11 +19,13 @@ share/man/man8/tdbbackup.8.gz
 share/man/man8/tdbdump.8.gz
 share/man/man8/tdbrestore.8.gz
 share/man/man8/tdbtool.8.gz
+share/man/man3/talloc.3.gz
 "
 
 termux_step_pre_configure() {
 	CPPFLAGS+=" -D_FILE_OFFSET_BITS=64"
 	LDFLAGS+=" -landroid-spawn"
+	export PYTHONHASHSEED=1
 }
 
 termux_step_configure() {
@@ -93,7 +94,7 @@ EOF
 	USING_SYSTEM_COMPILE_ET=1 COMPILE_ET=/usr/bin/compile_et \
 	CFLAGS="$CFLAGS" LINKFLAGS="$CFLAGS $LDFLAGS" \
 	./buildtools/bin/waf configure \
-		--jobs="$TERMUX_MAKE_PROCESSES" \
+		--jobs="$TERMUX_PKG_MAKE_PROCESSES" \
 		--bundled-libraries='!asn1_compile,!compile_et' \
 		--cross-compile \
 		--cross-answers=cross-answers.txt \
@@ -130,7 +131,7 @@ EOF
 		--without-pam \
 		--without-quotas \
 		--without-regedit \
-		--with-system-mitkrb5 "$TERMUX_PREFIX" \
+		--with-system-mitkrb5 \
 		--without-systemd \
 		--without-utmp \
 		--without-winbind \
@@ -144,11 +145,11 @@ EOF
 
 
 termux_step_make() {
-	./buildtools/bin/waf build --jobs="$TERMUX_MAKE_PROCESSES"
+	./buildtools/bin/waf build --jobs="$TERMUX_PKG_MAKE_PROCESSES"
 }
 
 termux_step_make_install() {
-	./buildtools/bin/waf install --jobs="$TERMUX_MAKE_PROCESSES"
+	./buildtools/bin/waf install --jobs="$TERMUX_PKG_MAKE_PROCESSES"
 }
 
 termux_step_post_make_install() {
