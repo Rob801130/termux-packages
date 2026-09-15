@@ -2,10 +2,11 @@ TERMUX_PKG_HOMEPAGE=https://www.capstone-engine.org/
 TERMUX_PKG_DESCRIPTION="Lightweight multi-platform, multi-architecture disassembly framework"
 TERMUX_PKG_LICENSE="BSD"
 TERMUX_PKG_MAINTAINER="@termux"
-TERMUX_PKG_VERSION="5.0.1"
-TERMUX_PKG_SRCURL=https://github.com/capstone-engine/capstone/archive/${TERMUX_PKG_VERSION}.tar.gz
-TERMUX_PKG_SHA256=2b9c66915923fdc42e0e32e2a9d7d83d3534a45bb235e163a70047951890c01a
+TERMUX_PKG_VERSION="5.0.9"
+TERMUX_PKG_SRCURL="https://github.com/capstone-engine/capstone/archive/refs/tags/${TERMUX_PKG_VERSION}.tar.gz"
+TERMUX_PKG_SHA256=0619da31af08152600af95c481527ef6d756c0a8404fca7544a4fdf6dfc2c0f9
 TERMUX_PKG_AUTO_UPDATE=true
+TERMUX_PKG_UPDATE_VERSION_REGEXP="\d+\.\d+\.\d+(?!-)"
 TERMUX_PKG_BREAKS="capstone-dev"
 TERMUX_PKG_REPLACES="capstone-dev"
 
