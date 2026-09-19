@@ -1,10 +1,10 @@
 TERMUX_PKG_HOMEPAGE=https://www.storj.io/integrations/uplink-cli
 TERMUX_PKG_DESCRIPTION="Storj DCS Uplink CLI"
-TERMUX_PKG_LICENSE="AGPL-V3"
+TERMUX_PKG_LICENSE="AGPL-3.0-only"
 TERMUX_PKG_MAINTAINER="@termux"
-TERMUX_PKG_VERSION="1.89.5"
-TERMUX_PKG_SRCURL=https://github.com/storj/storj/archive/refs/tags/v${TERMUX_PKG_VERSION}.tar.gz
-TERMUX_PKG_SHA256=85cae50881a23e024c3d9b70b2c3b79bffd109c01f3d44de982f9f28808c97cf
+TERMUX_PKG_VERSION="1.163.4"
+TERMUX_PKG_SRCURL="https://github.com/storj/storj/archive/refs/tags/v${TERMUX_PKG_VERSION}.tar.gz"
+TERMUX_PKG_SHA256=952fa603e68dd86a20d4d434217027b0dd1d6f91a274908d8a4572cf4794ff82
 TERMUX_PKG_AUTO_UPDATE=true
 TERMUX_PKG_BUILD_IN_SRC=true
 
@@ -20,5 +20,5 @@ termux_step_make() {
 }
 
 termux_step_make_install() {
-	install -Dm700 -t $TERMUX_PREFIX/bin uplink
+	install -Dm700 -t "$TERMUX_PREFIX/bin" uplink
 }
