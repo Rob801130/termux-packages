@@ -4,10 +4,11 @@ TERMUX_PKG_DESCRIPTION="Simple command-line screenshot utility for X"
 TERMUX_PKG_LICENSE="custom"
 TERMUX_PKG_LICENSE_FILE="COPYING"
 TERMUX_PKG_MAINTAINER="@termux"
-TERMUX_PKG_VERSION=1.10
+TERMUX_PKG_VERSION="2.0.0"
 TERMUX_PKG_SRCURL=https://github.com/resurrecting-open-source-projects/scrot/releases/download/${TERMUX_PKG_VERSION}/scrot-${TERMUX_PKG_VERSION}.tar.gz
-TERMUX_PKG_SHA256=d3fb2fb962c1921030a442448afb1994d77d40192868da1b4cdeade0066bf36f
-TERMUX_PKG_DEPENDS="imlib2, libx11, libxcomposite, libxext, libxfixes, libxinerama"
+TERMUX_PKG_SHA256=1b4b3acadfe07bf89234838675d1d23508a9a6810cb64584f1d9610103d6cdfa
+TERMUX_PKG_AUTO_UPDATE=true
+TERMUX_PKG_DEPENDS="imlib2, libx11, libxcomposite, libxfixes, libxrandr"
 
 termux_step_pre_configure() {
 	local _inc="$TERMUX_PKG_SRCDIR/_getsubopt/include"

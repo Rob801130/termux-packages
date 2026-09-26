@@ -2,9 +2,9 @@ TERMUX_PKG_HOMEPAGE=https://github.com/rfc1036/whois
 TERMUX_PKG_DESCRIPTION="An intelligent Whois client"
 TERMUX_PKG_LICENSE="GPL-2.0"
 TERMUX_PKG_MAINTAINER="@termux"
-TERMUX_PKG_VERSION=5.5.19
-TERMUX_PKG_SRCURL=https://ftp.debian.org/debian/pool/main/w/whois/whois_${TERMUX_PKG_VERSION}.tar.xz
-TERMUX_PKG_SHA256=f92817716e85e2e30851eab565d69c48ddbcb61ab92634a2a5fdff8ee7b26876
+TERMUX_PKG_VERSION="5.6.6"
+TERMUX_PKG_SRCURL=https://github.com/rfc1036/whois/archive/refs/tags/v$TERMUX_PKG_VERSION.tar.gz
+TERMUX_PKG_SHA256=43d3b3cc64c75e8bd10aee6feff3906e9488ed335076d206e70f3b25bf644969
 TERMUX_PKG_DEPENDS="libcrypt, libiconv, libidn2"
 TERMUX_PKG_CONFLICTS="inetutils (<< 1.9.4-13)"
 TERMUX_PKG_BUILD_IN_SRC=true
@@ -14,6 +14,7 @@ HAVE_ICONV=1
 "
 
 TERMUX_PKG_AUTO_UPDATE=true
+TERMUX_PKG_UPDATE_VERSION_REGEXP='v\d+\.\d+\.\d+'
 
 termux_step_pre_configure() {
 	CPPFLAGS+=" -DHAVE_CRYPT_H"
