@@ -2,9 +2,9 @@ TERMUX_PKG_HOMEPAGE=https://geth.ethereum.org/
 TERMUX_PKG_DESCRIPTION="Go implementation of the Ethereum protocol"
 TERMUX_PKG_LICENSE="LGPL-3.0, GPL-3.0"
 TERMUX_PKG_MAINTAINER="@termux"
-TERMUX_PKG_VERSION="1.13.4"
-TERMUX_PKG_SRCURL=https://github.com/ethereum/go-ethereum/archive/v$TERMUX_PKG_VERSION.tar.gz
-TERMUX_PKG_SHA256=e74d320fe96a40686832ba0a84b6d492e30a3cbb5c156b61b52bee8edfdc6414
+TERMUX_PKG_VERSION="1.17.7"
+TERMUX_PKG_SRCURL=https://github.com/ethereum/go-ethereum/archive/refs/tags/v${TERMUX_PKG_VERSION}.tar.gz
+TERMUX_PKG_SHA256=1b2b0759240d70d959d43fd9d2f9df3fe48ed990f270bb5fd9f593f61ef3127b
 TERMUX_PKG_AUTO_UPDATE=true
 TERMUX_PKG_SUGGESTS="geth-utils"
 
@@ -16,14 +16,14 @@ termux_step_make() {
 	ln -sf "$TERMUX_PKG_SRCDIR" "$GOPATH"/src/github.com/ethereum/go-ethereum
 
 	cd "$GOPATH"/src/github.com/ethereum/go-ethereum
-	for applet in abidump abigen bootnode clef devp2p ethkey evm faucet geth p2psim rlpdump; do
-		(cd ./cmd/"$applet" && go build -v)
+	for applet in abidump abigen blsync devp2p era ethkey evm geth rlpdump; do
+		go -C ./cmd/"$applet" build -ldflags=-checklinkname=0 -v
 	done
 	unset applet
 }
 
 termux_step_make_install() {
-	for applet in abidump abigen bootnode clef devp2p ethkey evm faucet geth p2psim rlpdump; do
+	for applet in abidump abigen blsync devp2p era ethkey evm geth rlpdump; do
 		install -Dm700 \
 			"$TERMUX_PKG_SRCDIR/cmd/$applet/$applet" \
 			"$TERMUX_PREFIX"/bin/

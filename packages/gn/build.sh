@@ -3,10 +3,9 @@ TERMUX_PKG_DESCRIPTION="Meta-build system that generates build files for Ninja"
 TERMUX_PKG_LICENSE="BSD 3-Clause"
 TERMUX_PKG_MAINTAINER="Yaksh Bariya <thunder-coding@termux.dev>"
 TERMUX_PKG_SRCURL=git+https://gn.googlesource.com/gn
-_COMMIT=53ef169800760fdc09f0773bf380fe99eaeab339
-_COMMIT_DATE=2022.05.02
+_COMMIT=e44942b445d9376451f7d519965dae036efde5bc
+_COMMIT_DATE=2026.05.21
 TERMUX_PKG_VERSION=${_COMMIT_DATE//./}
-TERMUX_PKG_REVISION=1
 TERMUX_PKG_GIT_BRANCH=main
 TERMUX_PKG_DEPENDS="libc++"
 TERMUX_PKG_RECOMMENDS="ninja"
@@ -22,7 +21,7 @@ termux_step_post_get_source() {
 		echo " is different from what is expected to be: \"$version\""
 		return 1
 	fi
-
+	termux_setup_gn
 }
 
 termux_step_configure() {

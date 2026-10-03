@@ -5,7 +5,7 @@ termux_setup_swift() {
 	if [ "$TERMUX_ON_DEVICE_BUILD" = "false" ]; then
 		local TERMUX_SWIFT_VERSION=$(. $TERMUX_SCRIPTDIR/packages/swift/build.sh; echo $TERMUX_PKG_VERSION)
 		local SWIFT_RELEASE=$(. $TERMUX_SCRIPTDIR/packages/swift/build.sh; echo $SWIFT_RELEASE)
-		local SWIFT_BIN="swift-$TERMUX_SWIFT_VERSION-$SWIFT_RELEASE-ubuntu22.04"
+		local SWIFT_BIN="swift-$TERMUX_SWIFT_VERSION-$SWIFT_RELEASE-ubuntu26.04"
 		local SWIFT_FOLDER
 
 		if [ "${TERMUX_PACKAGES_OFFLINE-false}" = "true" ]; then
@@ -17,9 +17,9 @@ termux_setup_swift() {
 		if [ ! -d "$SWIFT_FOLDER" ]; then
 			local SWIFT_TAR=$TERMUX_PKG_TMPDIR/${SWIFT_BIN}.tar.gz
 			termux_download \
-				https://download.swift.org/swift-$TERMUX_SWIFT_VERSION-release/ubuntu2204/swift-$TERMUX_SWIFT_VERSION-$SWIFT_RELEASE/$SWIFT_BIN.tar.gz \
+				https://download.swift.org/swift-$TERMUX_SWIFT_VERSION-release/ubuntu2604/swift-$TERMUX_SWIFT_VERSION-$SWIFT_RELEASE/$SWIFT_BIN.tar.gz \
 				$SWIFT_TAR \
-				ea2fe1190a9cb8abed8c5e7b94223a06a23c7dc8cd498850a1c79b8a87e7c251
+				c966d52a195724238fcc082afefac8f274dff1f30cf2ace5f93ec684c17b0026
 
 			(cd $TERMUX_PKG_TMPDIR ; tar xf $SWIFT_TAR ; mv $SWIFT_BIN $SWIFT_FOLDER; rm $SWIFT_TAR)
 		fi

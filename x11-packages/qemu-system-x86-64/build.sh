@@ -2,14 +2,13 @@ TERMUX_PKG_HOMEPAGE=https://www.qemu.org
 TERMUX_PKG_DESCRIPTION="A generic and open source machine emulator and virtualizer"
 TERMUX_PKG_LICENSE="GPL-2.0"
 TERMUX_PKG_MAINTAINER="@termux"
-TERMUX_PKG_VERSION=1:8.0.2
-TERMUX_PKG_SRCURL=https://download.qemu.org/qemu-${TERMUX_PKG_VERSION:2}.tar.xz
-TERMUX_PKG_SHA256=f060abd435fbe6794125e2c398568ffc3cfa540042596907a8b18edca34cf6a5
-TERMUX_PKG_DEPENDS="gdk-pixbuf, glib, gtk3, libbz2, libcairo, libcurl, libepoxy, libgmp, libgnutls, libiconv, libjpeg-turbo, liblzo, libnettle, libnfs, libpixman, libpng, libslirp, libspice-server, libssh, libusb, libusbredir, libx11, mesa, ncurses, pulseaudio, qemu-common, resolv-conf, sdl2, sdl2-image, virglrenderer, zlib, zstd"
-
+TERMUX_PKG_VERSION="1:11.0.3"
+TERMUX_PKG_SRCURL="https://download.qemu.org/qemu-${TERMUX_PKG_VERSION:2}.tar.xz"
+TERMUX_PKG_SHA256=da5fcffc32762820568b828ed430a728864d34d50b6d2f30358597760cbb0523
+TERMUX_PKG_DEPENDS="alsa-lib, dtc, gdk-pixbuf, glib, jack2, gtk3, libbz2, libcairo, libcurl, libdw, libepoxy, libgmp, libgnutls, libiconv, libjpeg-turbo, liblzo, libnettle, libnfs, libpixman, libpng, libslirp, libspice-server, libssh, libusb, libusbredir, libx11, mesa, ncurses, pulseaudio, qemu-common, resolv-conf, sdl2 | sdl2-compat, sdl2-image, virglrenderer, zlib, zstd"
 # Required by configuration script, but I can't find any binary that uses it.
 TERMUX_PKG_BUILD_DEPENDS="libtasn1"
-
+TERMUX_PKG_ANTI_BUILD_DEPENDS="sdl2-compat"
 # Remove files already present in qemu-utils and qemu-common.
 TERMUX_PKG_RM_AFTER_INSTALL="
 bin/elf2dmp
@@ -17,19 +16,18 @@ bin/qemu-edid
 bin/qemu-ga
 bin/qemu-img
 bin/qemu-io
+bin/qemu-keymap
 bin/qemu-nbd
 bin/qemu-pr-helper
 bin/qemu-storage-daemon
 include/*
 libexec/qemu-bridge-helper
-libexec/virtfs-proxy-helper
 share/applications
 share/doc
 share/icons
 share/man/man1/qemu-img.1*
 share/man/man1/qemu-storage-daemon.1*
 share/man/man1/qemu.1*
-share/man/man1/virtfs-proxy-helper.1*
 share/man/man7
 share/man/man8/qemu-ga.8*
 share/man/man8/qemu-nbd.8*
@@ -40,6 +38,7 @@ share/qemu
 TERMUX_PKG_CONFLICTS="qemu-system-x86_64, qemu-system-x86_64-headless, qemu-system-x86-64-headless"
 TERMUX_PKG_REPLACES="qemu-system-x86_64, qemu-system-x86_64-headless, qemu-system-x86-64-headless"
 TERMUX_PKG_PROVIDES="qemu-system-x86_64"
+TERMUX_PKG_EXCLUDED_ARCHES="arm, i686"
 TERMUX_PKG_BUILD_IN_SRC=true
 
 termux_step_pre_configure() {
@@ -123,12 +122,11 @@ termux_step_configure() {
 		--disable-xen-pci-passthrough \
 		--enable-virtfs \
 		--enable-curl \
-		--enable-fdt \
+		--enable-fdt=system \
 		--enable-kvm \
-		--disable-hax \
 		--disable-hvf \
 		--disable-whpx \
-		--enable-libnfs \
+		--disable-libnfs \
 		--enable-lzo \
 		--disable-snappy \
 		--enable-bzip2 \

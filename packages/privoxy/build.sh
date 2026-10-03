@@ -1,12 +1,12 @@
 TERMUX_PKG_HOMEPAGE=https://www.privoxy.org
 TERMUX_PKG_DESCRIPTION="Non-caching web proxy with advanced filtering capabilities"
-# License: GPL-2.0-or-later
-TERMUX_PKG_LICENSE="GPL-2.0, GPL-3.0"
+TERMUX_PKG_LICENSE="GPL-2.0-or-later"
 TERMUX_PKG_LICENSE_FILE="LICENSE, LICENSE.GPLv3"
 TERMUX_PKG_MAINTAINER="@termux"
-TERMUX_PKG_VERSION=3.0.34
+TERMUX_PKG_VERSION="4.2.0"
 TERMUX_PKG_SRCURL=https://downloads.sourceforge.net/project/ijbswa/Sources/$TERMUX_PKG_VERSION%20%28stable%29/privoxy-$TERMUX_PKG_VERSION-stable-src.tar.gz
-TERMUX_PKG_SHA256=e6ccbca1656f4e616b4657f8514e33a70f6697e9d7294356577839322a3c5d2c
+TERMUX_PKG_SHA256=6f91267f81f626c416994db89ab62f4d09246eebf4754b81186e13a18ee9028f
+TERMUX_PKG_AUTO_UPDATE=true
 # Termux-services adds the run scripts to TERMUX_PKG_CONFFILES. Those ones can
 # not be copied in termux_step_post_massage so setup special variable for that
 DEFAULT_CONFFILES="\
@@ -19,10 +19,9 @@ etc/privoxy/default.action
 etc/privoxy/default.filter"
 TERMUX_PKG_CONFFILES=$DEFAULT_CONFFILES
 TERMUX_PKG_EXTRA_CONFIGURE_ARGS="
-ac_cv_lib_pcreposix_regcomp=no
 --sysconfdir=$TERMUX_PREFIX/etc/privoxy
 "
-TERMUX_PKG_DEPENDS="pcre, libpcreposix, zlib"
+TERMUX_PKG_DEPENDS="pcre2, zlib"
 TERMUX_PKG_BUILD_IN_SRC=true
 TERMUX_PKG_SERVICE_SCRIPT=("privoxy"
 "if [ -f \"$TERMUX_ANDROID_HOME/.config/privoxy/config\" ]; then \

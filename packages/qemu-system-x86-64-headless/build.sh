@@ -2,10 +2,10 @@ TERMUX_PKG_HOMEPAGE=https://www.qemu.org
 TERMUX_PKG_DESCRIPTION="A generic and open source machine emulator and virtualizer (headless)"
 TERMUX_PKG_LICENSE="GPL-2.0"
 TERMUX_PKG_MAINTAINER="@termux"
-TERMUX_PKG_VERSION=1:8.0.2
-TERMUX_PKG_SRCURL=https://download.qemu.org/qemu-${TERMUX_PKG_VERSION:2}.tar.xz
-TERMUX_PKG_SHA256=f060abd435fbe6794125e2c398568ffc3cfa540042596907a8b18edca34cf6a5
-TERMUX_PKG_DEPENDS="glib, libbz2, libcurl, libgmp, libgnutls, libiconv, libjpeg-turbo, liblzo, libnettle, libnfs, libpixman, libpng, libslirp, libspice-server, libssh, libusb, libusbredir, ncurses, pulseaudio, qemu-common, resolv-conf, zlib, zstd"
+TERMUX_PKG_VERSION="1:11.0.3"
+TERMUX_PKG_SRCURL="https://download.qemu.org/qemu-${TERMUX_PKG_VERSION:2}.tar.xz"
+TERMUX_PKG_SHA256=da5fcffc32762820568b828ed430a728864d34d50b6d2f30358597760cbb0523
+TERMUX_PKG_DEPENDS="alsa-lib, dtc, glib, jack2, libbz2, libcurl, libdw, libgmp, libgnutls, libiconv, libjpeg-turbo, liblzo, libnettle, libnfs, libpixman, libpng, libslirp, libspice-server, libssh, libusb, libusbredir, ncurses, pulseaudio, qemu-common, resolv-conf, zlib, zstd"
 
 # Required by configuration script, but I can't find any binary that uses it.
 TERMUX_PKG_BUILD_DEPENDS="libtasn1"
@@ -13,6 +13,7 @@ TERMUX_PKG_BUILD_DEPENDS="libtasn1"
 TERMUX_PKG_CONFLICTS="qemu-system-x86_64-headless"
 TERMUX_PKG_REPLACES="qemu-system-x86_64-headless"
 TERMUX_PKG_PROVIDES="qemu-system-x86_64-headless"
+TERMUX_PKG_EXCLUDED_ARCHES="arm, i686"
 TERMUX_PKG_BUILD_IN_SRC=true
 
 termux_step_pre_configure() {
@@ -105,12 +106,11 @@ termux_step_configure() {
 		--disable-xen-pci-passthrough \
 		--enable-virtfs \
 		--enable-curl \
-		--enable-fdt \
+		--enable-fdt=system \
 		--enable-kvm \
-		--disable-hax \
 		--disable-hvf \
 		--disable-whpx \
-		--enable-libnfs \
+		--disable-libnfs \
 		--enable-lzo \
 		--disable-snappy \
 		--enable-bzip2 \

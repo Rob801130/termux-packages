@@ -1,16 +1,39 @@
 TERMUX_PKG_HOMEPAGE=https://audacious-media-player.org
 TERMUX_PKG_DESCRIPTION="An advanced audio player"
 TERMUX_PKG_LICENSE="BSD 2-Clause"
-TERMUX_PKG_MAINTAINER="Simeon Huang <symeon@librehat.com>"
-TERMUX_PKG_VERSION=4.3.1
-TERMUX_PKG_AUTO_UPDATE=true
-TERMUX_PKG_SRCURL=https://distfiles.audacious-media-player.org/audacious-${TERMUX_PKG_VERSION}.tar.bz2
-TERMUX_PKG_SHA256=85e9e26841505b51e342ee72a2d05f19bef894f567a029ebb3f3e0c1adb42042
-TERMUX_PKG_DEPENDS="libc++, qt5-qtbase, dbus-glib"
-TERMUX_PKG_BUILD_DEPENDS="qt5-qtbase-cross-tools"
+TERMUX_PKG_MAINTAINER="@termux"
+TERMUX_PKG_VERSION="4.6.1"
+TERMUX_PKG_SRCURL="https://distfiles.audacious-media-player.org/audacious-${TERMUX_PKG_VERSION}.tar.bz2"
+TERMUX_PKG_SHA256=62a5a609267eca7f6e3ce52ef6f42d5618d2961e3b4ddc227c6a5859026965d9
+TERMUX_PKG_DEPENDS="libarchive, libc++, qt6-qtbase, qt6-qttools, qt6-qtsvg, qt6-qtdeclarative, dbus-glib"
+TERMUX_PKG_BUILD_DEPENDS="qt6-qtbase-cross-tools, qt6-qttools-cross-tools, qt6-qtsvg-cross-tools, qt6-qtdeclarative-cross-tools"
 TERMUX_PKG_RECOMMENDS="audacious-plugins"
-# Audacious out-of-source build doesn't seem to work
-TERMUX_PKG_BUILD_IN_SRC=true
-# Audacious has switched to Qt toolkit and it's the default GUI option now
-# Disable GTK to reduce the size and dependencies
-TERMUX_PKG_EXTRA_CONFIGURE_ARGS="--enable-qt --disable-gtk"
+TERMUX_PKG_AUTO_UPDATE=true
+# Enable Qt6, disable Qt5 and all GTK
+TERMUX_PKG_EXTRA_CONFIGURE_ARGS="
+-Ddbus=true
+-Dqt=true
+-Dqt5=false
+-Dgtk=false
+-Dgtk2=false
+-Dlibarchive=true
+-Dvalgrind=false
+"
+
+termux_step_configure() {
+	termux_setup_meson
+
+	# This is how to cross-compile Qt6 packages that use the Meson build system
+	if [[ "$TERMUX_ON_DEVICE_BUILD" == "false" ]]; then
+		local TERMUX_MESON_QT_CROSSFILE="$TERMUX_PKG_TMPDIR/qt-cross-file.txt"
+		cp -f "$TERMUX_MESON_CROSSFILE" "$TERMUX_MESON_QT_CROSSFILE"
+		local qt6_tool
+		for qt6_tool in bin/lrelease moc uic qmltyperegistrar qmlcachegen rcc; do
+			sed -i "s|^\(\[binaries\]\)$|\1\n${TERMUX_PREFIX}/lib/qt6/${qt6_tool} = '${TERMUX_PREFIX}/opt/qt6/cross/lib/qt6/${qt6_tool}'|g" \
+				"$TERMUX_MESON_QT_CROSSFILE"
+		done
+		TERMUX_PKG_EXTRA_CONFIGURE_ARGS+=" --cross-file $TERMUX_MESON_QT_CROSSFILE"
+	fi
+
+	termux_step_configure_meson
+}

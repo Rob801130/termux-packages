@@ -2,13 +2,13 @@ TERMUX_PKG_HOMEPAGE=https://common-lisp.net/project/ecl/
 TERMUX_PKG_DESCRIPTION="ECL (Embeddable Common Lisp) is an interpreter of the Common Lisp language"
 TERMUX_PKG_LICENSE="LGPL-2.0"
 TERMUX_PKG_MAINTAINER="@termux"
-TERMUX_PKG_VERSION="23.9.9"
+TERMUX_PKG_VERSION="26.5.5"
 TERMUX_PKG_SRCURL=https://common-lisp.net/project/ecl/static/files/release/ecl-${TERMUX_PKG_VERSION}.tgz
-TERMUX_PKG_SHA256=c51bdab4ca6c1173dd3fe9cfe9727bcefb97bb0a3d6434b627ca6bdaeb33f880
+TERMUX_PKG_SHA256=a01a5bcda8c5b73e59dda3494fd13e5fec5db6aa1dad782c3cc3bb57f1633435
 TERMUX_PKG_DEPENDS="libandroid-support, libgmp, libgc, libffi"
 TERMUX_PKG_HOSTBUILD=true
 TERMUX_PKG_NO_STATICSPLIT=true
-TERMUX_PKG_BLACKLISTED_ARCHES="i686, x86_64"
+TERMUX_PKG_EXCLUDED_ARCHES="i686, x86_64"
 TERMUX_PKG_HAS_DEBUG=false
 
 # See https://gitlab.com/embeddable-common-lisp/ecl/-/blob/develop/INSTALL
